@@ -226,21 +226,40 @@ export default function MatchScoringConsole({ params }) {
   // Helper: Format duration
   const getMatchDuration = () => {
     if (!match) return "-";
+
+    // 1. If timer was configured by the admin (timed match)
+    if (match.timer_enabled && match.timer_duration_seconds > 0) {
+      // If completed due to time expiry or remaining time reached 0: duration is EXACTLY the configured timer duration
+      const isExpired =
+        match.completion_reason === "TIME_EXPIRED_HIGHER_SCORE" ||
+        match.completion_reason === "TIME_EXPIRED_TIED" ||
+        (match.status === "completed" && (match.timer_remaining_seconds ?? 0) <= 0);
+
+      if (isExpired) {
+        const total = match.timer_duration_seconds;
+        const mins = Math.floor(total / 60);
+        const secs = total % 60;
+        return mins > 0 ? (secs > 0 ? `${mins}m ${secs}s` : `${mins}m`) : `${secs}s`;
+      }
+
+      // If completed early before timer expired: calculate actual elapsed timer time, capped at configured duration
+      const rem = match.timer_remaining_seconds !== undefined && match.timer_remaining_seconds !== null
+        ? Math.max(0, match.timer_remaining_seconds)
+        : 0;
+      const elapsed = Math.min(match.timer_duration_seconds, Math.max(0, match.timer_duration_seconds - rem));
+      const mins = Math.floor(elapsed / 60);
+      const secs = elapsed % 60;
+      return mins > 0 ? (secs > 0 ? `${mins}m ${secs}s` : `${mins}m`) : `${secs}s`;
+    }
+
+    // 2. Untimed match: fallback to wall-clock completed_at - started_at
     if (match.started_at && match.completed_at) {
       const diffMs = Math.max(0, new Date(match.completed_at).getTime() - new Date(match.started_at).getTime());
       const mins = Math.floor(diffMs / 60000);
       const secs = Math.floor((diffMs % 60000) / 1000);
-      return mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+      return mins > 0 ? (secs > 0 ? `${mins}m ${secs}s` : `${mins}m`) : `${secs}s`;
     }
-    if (match.timer_enabled && match.timer_duration_seconds > 0) {
-      const rem = match.timer_remaining_seconds !== undefined && match.timer_remaining_seconds !== null
-        ? match.timer_remaining_seconds
-        : 0;
-      const elapsed = Math.max(0, match.timer_duration_seconds - rem);
-      const mins = Math.floor(elapsed / 60);
-      const secs = elapsed % 60;
-      return mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
-    }
+
     return "-";
   };
 
