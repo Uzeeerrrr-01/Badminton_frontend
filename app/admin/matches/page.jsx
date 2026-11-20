@@ -290,7 +290,8 @@ export default function AdminMatchesPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <>
+      <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-border">
         <div>
@@ -600,6 +601,7 @@ export default function AdminMatchesPage() {
           </div>
         </div>
       )}
+      </div>
 
       {/* Toss Modal */}
       {tossMatch && (
@@ -613,7 +615,7 @@ export default function AdminMatchesPage() {
 
       {/* Create Match Modal */}
       {createModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-primary/70 backdrop-blur-xs animate-in fade-in">
+        <div className="fixed inset-0 !m-0 m-0 z-50 flex items-center justify-center p-4 bg-primary/70 backdrop-blur-xs animate-in fade-in">
           <div className="bg-white rounded-2xl max-w-lg w-full border border-border shadow-elevated overflow-hidden max-h-[90vh] flex flex-col">
             <div className="px-6 py-4 border-b border-border flex items-center justify-between bg-slate-50">
               <h3 className="font-heading font-bold text-primary text-sm">
@@ -883,6 +885,6 @@ export default function AdminMatchesPage() {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }

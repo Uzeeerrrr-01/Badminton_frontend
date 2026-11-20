@@ -40,10 +40,10 @@ export default function AdminSidebar({ user }) {
   ];
 
   return (
-    <div className="w-full h-full bg-white flex flex-col justify-between shrink-0 select-none overflow-y-auto">
-      <div>
+    <div className="w-full h-full bg-white flex flex-col justify-between shrink-0 select-none overflow-hidden">
+      <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
         {/* Brand Header */}
-        <div className="h-16 px-5 border-b border-border flex items-center justify-between bg-white text-primary">
+        <div className="h-16 px-5 border-b border-border flex items-center justify-between bg-white text-primary shrink-0">
           <Link href="/admin" className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-accent text-white flex items-center justify-center font-bold shadow-emerald">
               <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
@@ -66,8 +66,8 @@ export default function AdminSidebar({ user }) {
           </Link>
         </div>
 
-        {/* Navigation Items */}
-        <nav className="p-3 space-y-1">
+        {/* Navigation Items (Scrollable in middle) */}
+        <nav className="p-3 space-y-1 flex-1 overflow-y-auto">
           {navItems.map((item) => {
             const isActive =
               item.href === "/admin"
@@ -109,7 +109,7 @@ export default function AdminSidebar({ user }) {
       </div>
 
       {/* Footer & User Info */}
-      <div className="p-4 border-t border-border space-y-3 bg-slate-50/50">
+      <div className="p-4 border-t border-border space-y-3 bg-slate-50/50 shrink-0">
         <Link
           href="/"
           target="_blank"
