@@ -1,11 +1,14 @@
 import { NextResponse } from "next/server";
 import { getMatch, checkAndFinalizeMatchByTimer, updateTimerAction } from "@/lib/db";
 import { getAdminSession } from "@/lib/auth";
+import { forwardToBackend } from "@/lib/backendProxy";
 
 export const dynamic = "force-dynamic";
 
-// GET current timer state
 export async function GET(request, { params }) {
+  const proxied = await forwardToBackend(request, `/api/matches/${params.id}/timer`);
+  if (proxied) return proxied;
+
   const match = getMatch(params.id);
   if (!match) {
     return NextResponse.json({ error: "Match not found" }, { status: 404 });
@@ -19,8 +22,10 @@ export async function GET(request, { params }) {
   });
 }
 
-// PUT – timer control actions: check, pause, resume, reset
 export async function PUT(request, { params }) {
+  const proxied = await forwardToBackend(request, `/api/matches/${params.id}/timer`);
+  if (proxied) return proxied;
+
   const session = getAdminSession(request);
   if (!session) {
     return NextResponse.json({ error: "Unauthorized. Admin access required." }, { status: 401 });

@@ -25,16 +25,21 @@ export default function AdminOverviewPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([
-      fetch("/api/matches").then((r) => r.json()),
-      fetch("/api/players").then((r) => r.json()),
-      fetch("/api/teams").then((r) => r.json()),
-      fetch("/api/settings").then((r) => r.json()),
+    Promise.allSettled([
+      fetch("/api/matches", { cache: "no-store" }).then((r) => (r.ok ? r.json() : {})),
+      fetch("/api/players", { cache: "no-store" }).then((r) => (r.ok ? r.json() : {})),
+      fetch("/api/teams", { cache: "no-store" }).then((r) => (r.ok ? r.json() : {})),
+      fetch("/api/settings", { cache: "no-store" }).then((r) => (r.ok ? r.json() : {})),
     ])
-      .then(([mData, pData, tData, sData]) => {
-        setMatches(mData.matches || []);
-        setPlayers(pData.players || []);
-        setTeams(tData.teams || []);
+      .then(([mRes, pRes, tRes, sRes]) => {
+        const mData = mRes.status === "fulfilled" ? mRes.value || {} : {};
+        const pData = pRes.status === "fulfilled" ? pRes.value || {} : {};
+        const tData = tRes.status === "fulfilled" ? tRes.value || {} : {};
+        const sData = sRes.status === "fulfilled" ? sRes.value || {} : {};
+
+        setMatches(mData.matches || (Array.isArray(mData) ? mData : []));
+        setPlayers(pData.players || (Array.isArray(pData) ? pData : []));
+        setTeams(tData.teams || (Array.isArray(tData) ? tData : []));
         setSettings(sData.settings || null);
       })
       .catch((err) => console.error(err))

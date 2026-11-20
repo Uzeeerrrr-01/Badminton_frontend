@@ -1,10 +1,14 @@
 import { NextResponse } from "next/server";
 import { verifyAdminCredentials } from "@/lib/db";
 import { createAdminToken } from "@/lib/auth";
+import { forwardToBackend } from "@/lib/backendProxy";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(request) {
+  const proxied = await forwardToBackend(request, "/api/auth/login");
+  if (proxied) return proxied;
+
   try {
     const { email, password } = await request.json();
 
@@ -48,10 +52,6 @@ export async function POST(request) {
 
     return response;
   } catch (error) {
-    console.error("Login error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

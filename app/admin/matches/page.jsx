@@ -57,14 +57,18 @@ export default function AdminMatchesPage() {
 
   const fetchData = async () => {
     try {
-      const [mRes, pRes, tRes] = await Promise.all([
-        fetch("/api/matches").then((r) => r.json()),
-        fetch("/api/players").then((r) => r.json()),
-        fetch("/api/teams").then((r) => r.json()),
+      const [mRes, pRes, tRes] = await Promise.allSettled([
+        fetch("/api/matches", { cache: "no-store" }).then((r) => (r.ok ? r.json() : {})),
+        fetch("/api/players", { cache: "no-store" }).then((r) => (r.ok ? r.json() : {})),
+        fetch("/api/teams", { cache: "no-store" }).then((r) => (r.ok ? r.json() : {})),
       ]);
-      setMatches(mRes.matches || []);
-      setPlayers(pRes.players || []);
-      setTeams(tRes.teams || []);
+      const mData = mRes.status === "fulfilled" ? mRes.value || {} : {};
+      const pData = pRes.status === "fulfilled" ? pRes.value || {} : {};
+      const tData = tRes.status === "fulfilled" ? tRes.value || {} : {};
+
+      setMatches(mData.matches || (Array.isArray(mData) ? mData : []));
+      setPlayers(pData.players || (Array.isArray(pData) ? pData : []));
+      setTeams(tData.teams || (Array.isArray(tData) ? tData : []));
     } catch (err) {
       console.error(err);
     } finally {

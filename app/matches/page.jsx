@@ -47,14 +47,14 @@ export default function MatchesPage() {
   ];
 
   const filteredMatches = (matches || []).filter((m) => {
-    if (statusFilter === "live" && m.status !== "live") return false;
+    if (statusFilter === "live" && m.status !== "live" && m.status !== "tied") return false;
     if (statusFilter === "upcoming" && m.status !== "scheduled" && m.status !== "ready") return false;
     if (statusFilter === "completed" && m.status !== "completed") return false;
     if (categoryFilter !== "all" && m.category !== categoryFilter) return false;
     return true;
   });
 
-  const liveCount = (matches || []).filter((m) => m.status === "live").length;
+  const liveCount = (matches || []).filter((m) => m.status === "live" || m.status === "tied").length;
   const upcomingCount = (matches || []).filter((m) => m.status === "scheduled" || m.status === "ready").length;
   const completedCount = (matches || []).filter((m) => m.status === "completed").length;
 

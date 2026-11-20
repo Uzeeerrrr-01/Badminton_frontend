@@ -22,17 +22,25 @@ export default function AdminPointsPage() {
 
   const fetchData = async () => {
     try {
-      const [ptRes, pRes, tRes] = await Promise.all([
-        fetch("/api/points").then((r) => r.json()),
-        fetch("/api/players").then((r) => r.json()),
-        fetch("/api/teams").then((r) => r.json()),
+      const [ptRes, pRes, tRes] = await Promise.allSettled([
+        fetch("/api/points", { cache: "no-store" }).then((r) => (r.ok ? r.json() : {})),
+        fetch("/api/players", { cache: "no-store" }).then((r) => (r.ok ? r.json() : {})),
+        fetch("/api/teams", { cache: "no-store" }).then((r) => (r.ok ? r.json() : {})),
       ]);
-      setLeaderboard(ptRes.leaderboard || []);
-      setHistory(ptRes.history || []);
-      setPlayers(pRes.players || []);
-      setTeams(tRes.teams || []);
-      if (pRes.players?.length > 0) {
-        setAdjEntityId(pRes.players[0].id);
+      const ptData = ptRes.status === "fulfilled" ? ptRes.value || {} : {};
+      const pData = pRes.status === "fulfilled" ? pRes.value || {} : {};
+      const tData = tRes.status === "fulfilled" ? tRes.value || {} : {};
+
+      const playerList = pData.players || (Array.isArray(pData) ? pData : []);
+      const teamList = tData.teams || (Array.isArray(tData) ? tData : []);
+      const lbList = ptData.leaderboard || (Array.isArray(ptData) ? ptData : []);
+
+      setLeaderboard(lbList);
+      setHistory(ptData.history || []);
+      setPlayers(playerList);
+      setTeams(teamList);
+      if (playerList.length > 0) {
+        setAdjEntityId(playerList[0].id);
       }
     } catch (err) {
       console.error(err);

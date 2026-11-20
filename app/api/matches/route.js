@@ -1,10 +1,14 @@
 import { NextResponse } from "next/server";
 import { getMatches, createMatch } from "@/lib/db";
 import { getAdminSession } from "@/lib/auth";
+import { forwardToBackend } from "@/lib/backendProxy";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request) {
+  const proxied = await forwardToBackend(request, "/api/matches");
+  if (proxied) return proxied;
+
   try {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status") || "";
@@ -19,6 +23,9 @@ export async function GET(request) {
 }
 
 export async function POST(request) {
+  const proxied = await forwardToBackend(request, "/api/matches");
+  if (proxied) return proxied;
+
   const session = getAdminSession(request);
   if (!session) {
     return NextResponse.json({ error: "Unauthorized. Admin access required." }, { status: 401 });

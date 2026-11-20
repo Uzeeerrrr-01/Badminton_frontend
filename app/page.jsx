@@ -58,20 +58,20 @@ export default function HomePage() {
 
   useEffect(() => {
     // Fetch settings
-    fetch("/api/settings")
-      .then((res) => res.json())
-      .then((data) => setSettings(data.settings))
+    fetch("/api/settings", { cache: "no-store" })
+      .then((res) => (res.ok ? res.json() : {}))
+      .then((data) => setSettings(data.settings || null))
       .catch((err) => console.error(err));
 
     // Fetch players
-    fetch("/api/players")
-      .then((res) => res.json())
+    fetch("/api/players", { cache: "no-store" })
+      .then((res) => (res.ok ? res.json() : {}))
       .then((data) => setPlayers(data.players || []))
       .catch((err) => console.error(err));
 
     // Fetch leaderboard
-    fetch("/api/points")
-      .then((res) => res.json())
+    fetch("/api/points", { cache: "no-store" })
+      .then((res) => (res.ok ? res.json() : {}))
       .then((data) => setLeaderboard(data.leaderboard || []))
       .catch((err) => console.error(err));
   }, []);

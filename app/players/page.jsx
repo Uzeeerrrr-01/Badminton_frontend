@@ -14,11 +14,13 @@ export default function PlayersDirectoryPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([
-      fetch("/api/players").then((r) => r.json()),
-      fetch("/api/points").then((r) => r.json()),
+    Promise.allSettled([
+      fetch("/api/players", { cache: "no-store" }).then((r) => (r.ok ? r.json() : {})),
+      fetch("/api/points", { cache: "no-store" }).then((r) => (r.ok ? r.json() : {})),
     ])
-      .then(([pData, ptData]) => {
+      .then(([pRes, ptRes]) => {
+        const pData = pRes.status === "fulfilled" ? pRes.value || {} : {};
+        const ptData = ptRes.status === "fulfilled" ? ptRes.value || {} : {};
         setPlayers(pData.players || []);
         setLeaderboard(ptData.leaderboard || []);
       })
@@ -37,12 +39,12 @@ export default function PlayersDirectoryPage() {
   const filteredPlayers = players.filter((p) => {
     if (search) {
       const q = search.toLowerCase();
-      const matchName = p.full_name.toLowerCase().includes(q);
-      const matchId = p.player_id.toLowerCase().includes(q);
+      const matchName = (p.full_name || "").toLowerCase().includes(q);
+      const matchId = (p.player_id || "").toLowerCase().includes(q);
       if (!matchName && !matchId) return false;
     }
     if (genderFilter && p.gender !== genderFilter) return false;
-    if (categoryFilter && !p.eligible_categories.includes(categoryFilter)) return false;
+    if (categoryFilter && (!p.eligible_categories || !p.eligible_categories.includes(categoryFilter))) return false;
     return true;
   });
 

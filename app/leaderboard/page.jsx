@@ -14,11 +14,13 @@ export default function LeaderboardPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([
-      fetch("/api/points").then((r) => r.json()),
-      fetch("/api/settings").then((r) => r.json()),
+    Promise.allSettled([
+      fetch("/api/points", { cache: "no-store" }).then((r) => (r.ok ? r.json() : {})),
+      fetch("/api/settings", { cache: "no-store" }).then((r) => (r.ok ? r.json() : {})),
     ])
-      .then(([ptData, sData]) => {
+      .then(([ptRes, sRes]) => {
+        const ptData = ptRes.status === "fulfilled" ? ptRes.value || {} : {};
+        const sData = sRes.status === "fulfilled" ? sRes.value || {} : {};
         setLeaderboard(ptData.leaderboard || []);
         setHistory(ptData.history || []);
         setSettings(sData.settings || null);
