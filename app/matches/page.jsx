@@ -6,7 +6,17 @@ import PublicFooter from "@/components/PublicFooter";
 import LiveScoreboardCard from "@/components/LiveScoreboardCard";
 import CourtVisualizer from "@/components/CourtVisualizer";
 import { useLiveMatches } from "@/lib/useLiveMatches";
-import { Activity, Clock, Calendar, CheckCircle2, Filter, X } from "lucide-react";
+import {
+  Activity,
+  Clock,
+  Calendar,
+  CheckCircle2,
+  Filter,
+  X,
+  Trophy,
+  ChevronRight,
+  Flame,
+} from "lucide-react";
 
 function formatMatchDateTime(match) {
   const ts = match.completed_at || match.started_at || match.scheduled_time || match.updated_at || match.created_at;
@@ -47,73 +57,89 @@ export default function MatchesPage() {
   ];
 
   const filteredMatches = (matches || []).filter((m) => {
-    if (statusFilter === "live" && m.status !== "live" && m.status !== "tied") return false;
-    if (statusFilter === "upcoming" && m.status !== "scheduled" && m.status !== "ready") return false;
+    if (statusFilter === "live" && m.status !== "live" && m.status !== "tied")
+      return false;
+    if (
+      statusFilter === "upcoming" &&
+      m.status !== "scheduled" &&
+      m.status !== "ready"
+    )
+      return false;
     if (statusFilter === "completed" && m.status !== "completed") return false;
     if (categoryFilter !== "all" && m.category !== categoryFilter) return false;
     return true;
   });
 
-  const liveCount = (matches || []).filter((m) => m.status === "live" || m.status === "tied").length;
-  const upcomingCount = (matches || []).filter((m) => m.status === "scheduled" || m.status === "ready").length;
-  const completedCount = (matches || []).filter((m) => m.status === "completed").length;
+  const liveCount = (matches || []).filter(
+    (m) => m.status === "live" || m.status === "tied",
+  ).length;
+  const upcomingCount = (matches || []).filter(
+    (m) => m.status === "scheduled" || m.status === "ready",
+  ).length;
+  const completedCount = (matches || []).filter(
+    (m) => m.status === "completed",
+  ).length;
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col bg-background selection:bg-accent-light selection:text-accent">
       <PublicNavbar />
 
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full">
-        {/* Header */}
+        {/* Header Banner */}
         <div className="mb-8">
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-primary tracking-tight">
-            Tournament Matches
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-accent-light text-accent border border-accent-border mb-3">
+            <span className="w-2 h-2 rounded-full bg-accent animate-ping" />
+            <span>CHAMPIONSHIP SCHEDULE & LIVE FEEDS</span>
+          </div>
+          <h1 className="text-3xl sm:text-4xl font-heading font-black text-primary tracking-tight">
+            Tournament Matches & Fixtures
           </h1>
-          <p className="text-sm text-muted mt-1">
-            Browse live court games, scheduled fixtures, and completed match results.
+          <p className="text-sm text-secondary mt-1 max-w-2xl">
+            Live court scoring synced directly with the umpire console, upcoming match schedules, and official results.
           </p>
         </div>
 
-        {/* Filter Controls */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-xl border border-border bg-surface shadow-subtle mb-8">
+        {/* Filter Controls Bar */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-3.5 rounded-2xl border border-border bg-white shadow-subtle mb-8">
           {/* Status Tabs */}
-          <div className="flex items-center gap-1 overflow-x-auto pb-1 md:pb-0">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0">
             <button
               onClick={() => setStatusFilter("all")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
                 statusFilter === "all"
-                  ? "bg-primary text-white font-semibold"
-                  : "text-muted hover:text-primary hover:bg-slate-100"
+                  ? "bg-primary text-white shadow-subtle"
+                  : "text-secondary hover:text-primary hover:bg-slate-50"
               }`}
             >
               All Matches ({(matches || []).length})
             </button>
             <button
               onClick={() => setStatusFilter("live")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 ${
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
                 statusFilter === "live"
-                  ? "bg-emerald-600 text-white font-semibold"
-                  : "text-muted hover:text-emerald-700 hover:bg-emerald-50"
+                  ? "bg-accent text-white shadow-emerald"
+                  : "text-secondary hover:text-accent hover:bg-accent-light/50"
               }`}
             >
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
-              Live ({liveCount})
+              <span className={`w-2 h-2 rounded-full ${statusFilter === "live" ? "bg-white" : "bg-accent"} animate-pulse`} />
+              Live On Court ({liveCount})
             </button>
             <button
               onClick={() => setStatusFilter("upcoming")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
                 statusFilter === "upcoming"
-                  ? "bg-primary text-white font-semibold"
-                  : "text-muted hover:text-primary hover:bg-slate-100"
+                  ? "bg-primary text-white shadow-subtle"
+                  : "text-secondary hover:text-primary hover:bg-slate-50"
               }`}
             >
               Upcoming ({upcomingCount})
             </button>
             <button
               onClick={() => setStatusFilter("completed")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
                 statusFilter === "completed"
-                  ? "bg-primary text-white font-semibold"
-                  : "text-muted hover:text-primary hover:bg-slate-100"
+                  ? "bg-primary text-white shadow-subtle"
+                  : "text-secondary hover:text-primary hover:bg-slate-50"
               }`}
             >
               Completed ({completedCount})
@@ -122,11 +148,11 @@ export default function MatchesPage() {
 
           {/* Category Filter */}
           <div className="flex items-center gap-2">
-            <Filter className="w-3.5 h-3.5 text-muted" />
+            <Filter className="w-3.5 h-3.5 text-secondary" />
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              className="text-xs px-3 py-1.5 border border-border rounded-lg bg-white text-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              className="text-xs px-3 py-1.5 border border-border rounded-xl bg-slate-50 text-primary font-semibold focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors"
             >
               <option value="all">All Categories</option>
               {categories.map((c) => (
@@ -141,12 +167,18 @@ export default function MatchesPage() {
         {/* Matches Grid */}
         <div className="space-y-6">
           {filteredMatches.length === 0 ? (
-            <div className="p-12 text-center rounded-2xl border border-dashed border-border bg-surface text-muted text-sm">
-              No matches found matching your filters.
+            <div className="p-16 text-center rounded-2xl border border-dashed border-border bg-white shadow-subtle">
+              <div className="w-12 h-12 rounded-full bg-slate-100 mx-auto flex items-center justify-center mb-3">
+                <Clock className="w-6 h-6 text-slate-400" />
+              </div>
+              <h3 className="font-heading font-black text-primary text-base">No Matches Found</h3>
+              <p className="text-xs text-muted max-w-sm mx-auto mt-1">
+                There are currently no matches matching the selected filters.
+              </p>
             </div>
           ) : (
             filteredMatches.map((m) => {
-              if (m.status === "live") {
+              if (m.status === "live" || m.status === "tied") {
                 return (
                   <LiveScoreboardCard
                     key={m.id}
@@ -157,29 +189,42 @@ export default function MatchesPage() {
               }
 
               const isCompleted = m.status === "completed";
+              const matchTime = formatMatchDateTime(m);
 
               return (
                 <div
                   key={m.id}
-                  className="p-5 rounded-xl border border-border bg-surface shadow-subtle hover:border-slate-300 transition-colors"
+                  className="p-6 rounded-2xl border border-border bg-white shadow-card hover:shadow-elevated hover:border-slate-300 transition-all"
                 >
-                  <div className="flex items-center justify-between text-xs text-muted mb-3 font-medium">
+                  <div className="flex flex-wrap items-center justify-between text-xs text-muted mb-4 gap-2 font-medium">
                     <div className="flex items-center gap-2">
-                      <span className="bg-slate-100 text-primary px-2.5 py-0.5 rounded font-bold text-[11px]">
+                      <span className="bg-slate-100 text-primary px-3 py-0.5 rounded-md font-bold text-xs border border-slate-200">
                         Court {m.court_number}
                       </span>
-                      <span>{m.category}</span>
-                      <span>•</span>
+                      <span className="text-primary font-bold">{m.category}</span>
+                      <span className="text-slate-300">•</span>
                       <span>{m.round}</span>
                     </div>
 
                     <div>
                       {isCompleted ? (
-                        <span className="text-emerald-700 font-semibold bg-emerald-50 px-2.5 py-0.5 rounded text-[11px] border border-emerald-200">
-                          Winner: {m.winner_name}
-                        </span>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="text-accent font-bold bg-accent-light px-3 py-0.5 rounded-full text-xs border border-accent-border">
+                            Winner: {m.winner_name}
+                          </span>
+                          {m.completion_reason === "SUDDEN_DEATH" && (
+                            <span className="text-amber-800 font-bold bg-amber-50 px-2 py-0.5 rounded-full text-[10px] border border-amber-border">
+                              ⚡ Sudden Death
+                            </span>
+                          )}
+                          {m.completion_reason === "TIME_EXPIRED_HIGHER_SCORE" && (
+                            <span className="text-secondary font-medium bg-slate-100 px-2 py-0.5 rounded-full text-[10px]">
+                              ⏱ Time Expired
+                            </span>
+                          )}
+                        </div>
                       ) : (
-                        <span className="capitalize text-slate-500 font-medium">
+                        <span className="capitalize font-bold text-slate-600 bg-slate-50 px-2.5 py-0.5 rounded border border-border">
                           {m.status}
                         </span>
                       )}
@@ -188,76 +233,122 @@ export default function MatchesPage() {
 
                   <div className="grid grid-cols-1 md:grid-cols-11 gap-4 items-center">
                     <div className="md:col-span-4">
-                      <p className={`text-base font-bold ${m.winner_team === "A" ? "text-emerald-800" : "text-primary"}`}>
+                      <p
+                        className={`text-base sm:text-lg font-heading font-black ${
+                          m.winner_team === "A" ? "text-accent" : "text-primary"
+                        }`}
+                      >
                         {m.team_a_name}
+                      </p>
+                      <p className="text-xs text-secondary mt-0.5">
+                        {m.team_a_player1?.full_name || ""}
                       </p>
                     </div>
 
                     <div className="md:col-span-3 text-center">
                       {isCompleted ? (
-                        <div className="inline-block px-4 py-1 rounded-lg bg-slate-100 font-mono font-bold text-lg text-primary">
+                        <div className="inline-block px-5 py-1.5 rounded-xl bg-slate-100 font-mono font-black text-xl text-primary tabular-nums border border-border">
                           {m.score_a} : {m.score_b}
                         </div>
                       ) : (
-                        <span className="text-xs font-semibold text-muted tracking-wider uppercase">
+                        <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-bold uppercase tracking-wider">
                           VS
-                        </span>
+                        </div>
                       )}
                     </div>
 
                     <div className="md:col-span-4 md:text-right">
-                      <p className={`text-base font-bold ${m.winner_team === "B" ? "text-emerald-800" : "text-primary"}`}>
+                      <p
+                        className={`text-base sm:text-lg font-heading font-black ${
+                          m.winner_team === "B" ? "text-accent" : "text-primary"
+                        }`}
+                      >
                         {m.team_b_name}
+                      </p>
+                      <p className="text-xs text-secondary mt-0.5">
+                        {m.team_b_player1?.full_name || ""}
                       </p>
                     </div>
                   </div>
 
                   {/* Date, Time & Details Footer */}
-                  {(() => {
-                    const matchTime = formatMatchDateTime(m);
-                    if (!matchTime) return null;
-                    return (
-                      <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-[11px] text-muted">
-                        <span className="font-medium text-slate-500">
-                          {isCompleted ? "Match Concluded" : m.scheduled_time ? "Scheduled Time" : "Match Time"}
-                        </span>
-                        <div className="flex items-center gap-1.5 font-medium text-slate-600">
-                          <Calendar className="w-3 h-3 text-slate-400" />
-                          <span>{matchTime.dateStr}</span>
-                          {matchTime.timeStr && (
-                            <>
-                              <span className="text-slate-300">•</span>
-                              <Clock className="w-3 h-3 text-slate-400" />
-                              <span>{matchTime.timeStr}</span>
-                            </>
-                          )}
-                        </div>
+                  {matchTime && (
+                    <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-muted">
+                      <span className="font-semibold text-slate-600">
+                        {isCompleted
+                          ? "Match Concluded"
+                          : m.scheduled_time
+                          ? "Scheduled Time"
+                          : "Fixture Time"}
+                      </span>
+                      <div className="flex items-center gap-2 font-medium text-slate-700">
+                        <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                        <span>{matchTime.dateStr}</span>
+                        {matchTime.timeStr && (
+                          <>
+                            <span className="text-slate-300">•</span>
+                            <Clock className="w-3.5 h-3.5 text-slate-400" />
+                            <span>{matchTime.timeStr}</span>
+                          </>
+                        )}
                       </div>
-                    );
-                  })()}
+                    </div>
+                  )}
                 </div>
               );
             })
           )}
         </div>
 
-        {/* Modal: Court details */}
+        {/* Modal: Court Details */}
         {selectedMatch && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
-            <div className="bg-surface rounded-2xl max-w-3xl w-full border border-border shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+            <div className="bg-white rounded-2xl max-w-3xl w-full border border-border shadow-elevated overflow-hidden max-h-[90vh] flex flex-col">
               <div className="p-4 border-b border-border flex items-center justify-between bg-slate-50">
-                <h3 className="font-bold text-primary text-sm">
-                  Court {selectedMatch.court_number} • {selectedMatch.category}
-                </h3>
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-accent animate-pulse" />
+                  <h3 className="font-heading font-black text-primary text-sm">
+                    Court {selectedMatch.court_number} • {selectedMatch.category} ({selectedMatch.round})
+                  </h3>
+                </div>
                 <button
+                  type="button"
                   onClick={() => setSelectedMatch(null)}
-                  className="p-1 rounded-lg text-muted hover:text-primary hover:bg-slate-200 transition-colors"
+                  className="p-1 rounded-lg text-secondary hover:text-primary hover:bg-slate-200 transition-colors"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
-              <div className="p-6 overflow-y-auto space-y-4">
+
+              <div className="p-6 overflow-y-auto space-y-6">
                 <CourtVisualizer match={selectedMatch} />
+
+                {/* Score Summary Side-by-Side */}
+                <div className="grid grid-cols-2 gap-4 text-center">
+                  <div className="p-4 rounded-xl bg-slate-50 border border-border">
+                    <p className="text-xs font-bold text-secondary mb-1 truncate">{selectedMatch.team_a_name}</p>
+                    <p className="text-4xl font-heading font-black text-primary">
+                      {selectedMatch.score_a}
+                    </p>
+                    {selectedMatch.serving_team === "A" && (
+                      <span className="inline-block mt-2 text-[10px] font-bold bg-accent-light text-accent border border-accent-border px-2 py-0.5 rounded-full">
+                        Serving ({selectedMatch.service_court} box)
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="p-4 rounded-xl bg-slate-50 border border-border">
+                    <p className="text-xs font-bold text-secondary mb-1 truncate">{selectedMatch.team_b_name}</p>
+                    <p className="text-4xl font-heading font-black text-primary">
+                      {selectedMatch.score_b}
+                    </p>
+                    {selectedMatch.serving_team === "B" && (
+                      <span className="inline-block mt-2 text-[10px] font-bold bg-accent-light text-accent border border-accent-border px-2 py-0.5 rounded-full">
+                        Serving ({selectedMatch.service_court} box)
+                      </span>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           </div>

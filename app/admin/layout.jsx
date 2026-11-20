@@ -42,8 +42,8 @@ export default function AdminLayout({ children }) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background text-muted text-xs">
         <div className="flex items-center gap-2">
-          <span className="w-2.5 h-2.5 rounded-full bg-teal-500 animate-ping"></span>
-          <span className="font-medium text-slate-700">Verifying administrative credentials...</span>
+          <span className="w-2.5 h-2.5 rounded-full bg-accent animate-ping"></span>
+          <span className="font-semibold text-primary">Verifying administrative credentials...</span>
         </div>
       </div>
     );

@@ -43,19 +43,24 @@ export default function AdminSidebar({ user }) {
     <aside className="w-64 bg-white border-r border-border min-h-screen flex flex-col justify-between shrink-0 shadow-subtle select-none">
       <div>
         {/* Brand Header */}
-        <div className="h-16 px-5 border-b border-border flex items-center justify-between bg-primary text-white">
+        <div className="h-16 px-5 border-b border-border flex items-center justify-between bg-white text-primary">
           <Link href="/admin" className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-teal-500/20 border border-teal-400/30 flex items-center justify-center text-teal-400">
+            <div className="w-8 h-8 rounded-lg bg-accent text-white flex items-center justify-center font-bold shadow-emerald">
               <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
                 <path d="M12 2a4 4 0 0 0-4 4c0 1.5.8 2.8 2 3.5V14l-4 3v3l5-1 1 2 1-2 5 1v-3l-4-3V9.5c1.2-.7 2-2 2-3.5a4 4 0 0 0-4-4z" />
               </svg>
             </div>
             <div>
-              <span className="font-heading font-black text-sm tracking-tight block text-white">
-                APEX OPEN
-              </span>
-              <span className="text-[10px] text-teal-300 font-medium tracking-wide uppercase">
-                Tournament Admin
+              <div className="flex items-center gap-1.5">
+                <span className="font-heading font-black text-sm tracking-tight block text-primary leading-none">
+                  APEX OPEN
+                </span>
+                <span className="text-[9px] font-bold bg-accent-light text-accent px-1 rounded">
+                  ADMIN
+                </span>
+              </div>
+              <span className="text-[10px] text-muted font-medium tracking-wide uppercase">
+                Tournament Umpire
               </span>
             </div>
           </Link>
@@ -76,14 +81,14 @@ export default function AdminSidebar({ user }) {
                 href={item.href}
                 className={`group flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${
                   isActive
-                    ? "bg-primary text-white shadow-subtle"
-                    : "text-slate-600 hover:text-primary hover:bg-slate-50"
+                    ? "bg-accent text-white shadow-emerald font-bold"
+                    : "text-secondary hover:text-primary hover:bg-slate-50"
                 }`}
               >
                 <div className="flex items-center gap-3">
                   <Icon
                     className={`w-4 h-4 transition-colors ${
-                      isActive ? "text-teal-400" : "text-slate-400 group-hover:text-primary"
+                      isActive ? "text-white" : "text-slate-400 group-hover:text-primary"
                     }`}
                   />
                   <span>{item.label}</span>
@@ -91,10 +96,10 @@ export default function AdminSidebar({ user }) {
 
                 <div className="flex items-center">
                   {item.highlight && !isActive && (
-                    <span className="w-2 h-2 rounded-full bg-teal-500 animate-pulse" />
+                    <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
                   )}
                   {isActive && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-teal-400" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-white" />
                   )}
                 </div>
               </Link>
@@ -108,7 +113,7 @@ export default function AdminSidebar({ user }) {
         <Link
           href="/"
           target="_blank"
-          className="flex items-center justify-between px-3 py-2 text-xs font-medium text-slate-600 hover:text-primary hover:bg-white rounded-lg transition-colors border border-dashed border-border"
+          className="flex items-center justify-between px-3 py-2 text-xs font-medium text-secondary hover:text-primary hover:bg-white rounded-lg transition-colors border border-border shadow-subtle"
         >
           <span className="font-semibold">Public Spectator Portal</span>
           <ExternalLink className="w-3.5 h-3.5 text-muted" />

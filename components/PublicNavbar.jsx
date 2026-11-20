@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
-import { Shield, Menu, X, ArrowUpRight, Zap } from "lucide-react";
+import { Shield, Menu, X, ArrowUpRight, Activity } from "lucide-react";
 
 export default function PublicNavbar() {
   const pathname = usePathname();
@@ -19,19 +19,19 @@ export default function PublicNavbar() {
 
   const navLinks = [
     { href: "/", label: "Overview" },
-    { href: "/matches", label: "Matches & Live" },
+    { href: "/matches", label: "Matches & Live", hasBadge: true },
     { href: "/players", label: "Competitors" },
     { href: "/leaderboard", label: "Standings" },
   ];
 
   return (
-    <header className="sticky top-0 z-40 bg-surface/95 backdrop-blur-md border-b border-border transition-colors">
+    <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-border transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         {/* Brand */}
         <Link href="/" className="flex items-center gap-3 group">
-          <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center text-white shadow-subtle group-hover:bg-primary-light transition-all">
+          <div className="w-9 h-9 rounded-xl bg-accent text-white flex items-center justify-center shadow-emerald group-hover:bg-accent-hover transition-all">
             <svg
-              className="w-5 h-5 text-accent"
+              className="w-5 h-5 text-white"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -43,70 +43,73 @@ export default function PublicNavbar() {
             </svg>
           </div>
           <div>
-            <span className="font-heading font-extrabold text-primary tracking-tight text-base sm:text-lg block leading-none">
-              APEX BADMINTON
-            </span>
-            <span className="text-[10px] text-muted tracking-widest uppercase font-semibold block mt-0.5">
-              Tournament Portal
+            <div className="flex items-center gap-1.5">
+              <span className="font-heading font-black text-primary tracking-tight text-base sm:text-lg block leading-none">
+                APEX BADMINTON
+              </span>
+              <span className="text-[10px] font-bold bg-accent-light text-accent border border-accent-border px-1.5 py-0.5 rounded-full">
+                OPEN
+              </span>
+            </div>
+            <span className="text-[10px] text-muted tracking-wider uppercase font-semibold block mt-0.5">
+              Official Championship Portal
             </span>
           </div>
         </Link>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-1 bg-slate-50/80 p-1 rounded-xl border border-border/60">
+        <nav className="hidden md:flex items-center gap-1 bg-slate-100/70 p-1 rounded-xl border border-border">
           {navLinks.map((link) => {
             const isActive = pathname === link.href;
             return (
               <Link
                 key={link.href}
                 href={link.href}
-                className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                className={`relative px-4 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                   isActive
                     ? "bg-white text-primary shadow-subtle font-bold"
-                    : "text-muted hover:text-primary hover:bg-white/60"
+                    : "text-secondary hover:text-primary hover:bg-white/60"
                 }`}
               >
-                {link.label}
+                <span className="flex items-center gap-1.5">
+                  {link.label}
+                  {link.hasBadge && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+                  )}
+                </span>
               </Link>
             );
           })}
         </nav>
 
-        {/* Right CTA */}
-        <div className="hidden md:flex items-center gap-3">
-          {isAdmin ? (
-            <Link
-              href="/admin"
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-lg bg-primary text-white hover:bg-primary-light transition-all shadow-subtle"
-            >
-              <Shield className="w-3.5 h-3.5 text-accent" />
-              <span>Admin Console</span>
-              <ArrowUpRight className="w-3.5 h-3.5 opacity-60" />
-            </Link>
-          ) : (
-            <Link
-              href="/login"
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-lg border border-border bg-white text-primary hover:bg-slate-50 transition-colors shadow-2xs"
-            >
-              <Shield className="w-3.5 h-3.5 text-muted" />
-              <span>Umpire Login</span>
-            </Link>
-          )}
+        {/* Right CTA / Admin Access */}
+        <div className="hidden sm:flex items-center gap-3">
+          <Link
+            href={isAdmin ? "/admin" : "/login"}
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold border border-border bg-white text-secondary hover:text-primary hover:bg-slate-50 hover:border-slate-300 transition-all shadow-subtle"
+          >
+            <Shield className="w-3.5 h-3.5 text-accent" />
+            <span>{isAdmin ? "Admin Console" : "Umpire Portal"}</span>
+            <ArrowUpRight className="w-3 h-3 text-muted" />
+          </Link>
         </div>
 
         {/* Mobile menu toggle */}
-        <button
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="md:hidden p-2 rounded-lg text-muted hover:text-primary hover:bg-slate-100 focus:outline-none"
-          aria-label="Toggle menu"
-        >
-          {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-        </button>
+        <div className="flex md:hidden items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="p-2 rounded-xl text-secondary hover:text-primary hover:bg-slate-100 transition-colors"
+            aria-label="Toggle Navigation"
+          >
+            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
+        </div>
       </div>
 
-      {/* Mobile menu dropdown */}
+      {/* Mobile menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-b border-border bg-surface px-4 pt-2 pb-5 space-y-1 animate-in fade-in duration-150">
+        <div className="md:hidden border-b border-border bg-white px-4 pt-3 pb-4 space-y-2">
           {navLinks.map((link) => {
             const isActive = pathname === link.href;
             return (
@@ -114,36 +117,28 @@ export default function PublicNavbar() {
                 key={link.href}
                 href={link.href}
                 onClick={() => setMobileMenuOpen(false)}
-                className={`block px-3 py-2 rounded-lg text-sm font-medium ${
+                className={`block px-3 py-2 rounded-xl text-sm font-semibold transition-colors ${
                   isActive
-                    ? "bg-slate-100 text-primary font-bold"
-                    : "text-muted hover:text-primary hover:bg-slate-50"
+                    ? "bg-accent-light text-accent"
+                    : "text-secondary hover:bg-slate-50 hover:text-primary"
                 }`}
               >
                 {link.label}
               </Link>
             );
           })}
-          <div className="pt-3 border-t border-border mt-3">
-            {isAdmin ? (
-              <Link
-                href="/admin"
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center justify-center gap-2 w-full py-2.5 text-xs font-semibold rounded-lg bg-primary text-white shadow-subtle"
-              >
+          <div className="pt-2 border-t border-border">
+            <Link
+              href={isAdmin ? "/admin" : "/login"}
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center justify-between px-3 py-2 rounded-xl text-sm font-semibold text-secondary hover:text-primary hover:bg-slate-50"
+            >
+              <span className="flex items-center gap-2">
                 <Shield className="w-4 h-4 text-accent" />
-                Go to Admin Console
-              </Link>
-            ) : (
-              <Link
-                href="/login"
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center justify-center gap-2 w-full py-2.5 text-xs font-semibold rounded-lg border border-border text-primary bg-white shadow-2xs"
-              >
-                <Shield className="w-4 h-4 text-muted" />
-                Umpire Login
-              </Link>
-            )}
+                <span>{isAdmin ? "Admin Console" : "Umpire Portal"}</span>
+              </span>
+              <ArrowUpRight className="w-4 h-4 text-muted" />
+            </Link>
           </div>
         </div>
       )}

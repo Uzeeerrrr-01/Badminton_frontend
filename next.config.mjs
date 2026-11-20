@@ -2,32 +2,18 @@
 const nextConfig = {
   reactStrictMode: false,
   async rewrites() {
-    const backendUrl = (
-      process.env.BACKEND_URL ||
-      process.env.NEXT_PUBLIC_SOCKET_URL ||
-      "http://localhost:5050"
-    ).replace(/\/$/, "");
+    const backendUrl = process.env.BACKEND_URL;
+    if (!backendUrl) {
+      return [];
+    }
 
-    return {
-      beforeFiles: [
-        {
-          source: "/api/:path*",
-          destination: `${backendUrl}/api/:path*`,
-        },
-      ],
-      afterFiles: [
-        {
-          source: "/api/:path*",
-          destination: `${backendUrl}/api/:path*`,
-        },
-      ],
-      fallback: [
-        {
-          source: "/api/:path*",
-          destination: `${backendUrl}/api/:path*`,
-        },
-      ],
-    };
+    const cleanUrl = backendUrl.replace(/\/$/, "");
+    return [
+      {
+        source: "/api/:path*",
+        destination: `${cleanUrl}/api/:path*`,
+      },
+    ];
   },
 };
 

@@ -11,26 +11,26 @@ export default function BracketView({ matches }) {
   }, {});
 
   return (
-    <div className="w-full overflow-x-auto py-6">
-      <div className="min-w-[760px] grid grid-cols-3 gap-8 items-center">
+    <div className="w-full overflow-x-auto py-4">
+      <div className="min-w-[760px] grid grid-cols-3 gap-6 items-center">
         {rounds.map((roundName, rIdx) => {
           const roundMatches = matchesByRound[roundName] || [];
 
           return (
             <div key={roundName} className="space-y-4">
-              <div className="text-center pb-2 border-b border-border">
-                <span className="text-xs font-bold text-primary uppercase tracking-wider">
+              <div className="text-center pb-2.5 border-b border-border">
+                <span className="text-xs font-heading font-black text-primary uppercase tracking-wider block">
                   {roundName}
                 </span>
-                <span className="block text-[11px] text-muted">
-                  {roundMatches.length} {roundMatches.length === 1 ? "Match" : "Matches"}
+                <span className="text-[11px] text-muted font-medium">
+                  {roundMatches.length} {roundMatches.length === 1 ? "Fixture" : "Fixtures"}
                 </span>
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {roundMatches.length === 0 ? (
-                  <div className="p-4 rounded-xl border border-dashed border-border text-center text-xs text-muted">
-                    Matches pending qualification
+                  <div className="p-6 rounded-xl border border-dashed border-border bg-slate-50/50 text-center text-xs text-muted">
+                    Fixtures pending earlier rounds
                   </div>
                 ) : (
                   roundMatches.map((m) => {
@@ -40,31 +40,36 @@ export default function BracketView({ matches }) {
                     return (
                       <div
                         key={m.id}
-                        className={`p-3.5 rounded-xl border bg-surface text-xs shadow-subtle transition-all ${
+                        className={`p-3.5 rounded-xl border bg-white text-xs shadow-subtle transition-all duration-150 ${
                           isLive
-                            ? "border-emerald-500 ring-2 ring-emerald-500/10"
+                            ? "border-accent ring-2 ring-accent/15"
                             : isCompleted
-                            ? "border-border"
-                            : "border-border/80"
+                            ? "border-border hover:border-slate-300"
+                            : "border-border/90"
                         }`}
                       >
-                        <div className="flex items-center justify-between text-[10px] text-muted mb-2 font-mono">
-                          <span>Court {m.court_number} • {m.category}</span>
+                        <div className="flex items-center justify-between text-[11px] text-muted mb-2 font-medium">
+                          <span className="font-semibold text-slate-700">
+                            Court {m.court_number} • {m.category}
+                          </span>
                           {isLive && (
-                            <span className="font-bold text-emerald-600 animate-pulse">
+                            <span className="inline-flex items-center gap-1 text-[10px] font-extrabold text-accent bg-accent-light px-2 py-0.5 rounded-full border border-accent-border">
+                              <span className="w-1.5 h-1.5 rounded-full bg-accent animate-ping" />
                               LIVE
                             </span>
                           )}
                           {isCompleted && (
-                            <span className="text-slate-500 font-medium">Final</span>
+                            <span className="text-slate-500 font-medium text-[10px] bg-slate-100 px-2 py-0.5 rounded">
+                              Final
+                            </span>
                           )}
                         </div>
 
                         {/* Participant A */}
                         <div
-                          className={`flex items-center justify-between py-1.5 px-2 rounded-lg ${
+                          className={`flex items-center justify-between py-1.5 px-2.5 rounded-lg transition-colors ${
                             m.winner_team === "A"
-                              ? "bg-emerald-50 text-emerald-950 font-bold"
+                              ? "bg-accent-light text-accent font-black border border-accent-border/60"
                               : "text-primary"
                           }`}
                         >
@@ -76,9 +81,9 @@ export default function BracketView({ matches }) {
 
                         {/* Participant B */}
                         <div
-                          className={`flex items-center justify-between py-1.5 px-2 rounded-lg mt-0.5 ${
+                          className={`flex items-center justify-between py-1.5 px-2.5 rounded-lg mt-1 transition-colors ${
                             m.winner_team === "B"
-                              ? "bg-emerald-50 text-emerald-950 font-bold"
+                              ? "bg-accent-light text-accent font-black border border-accent-border/60"
                               : "text-primary"
                           }`}
                         >
@@ -87,13 +92,6 @@ export default function BracketView({ matches }) {
                             {m.score_b}
                           </span>
                         </div>
-
-                        {m.winner_name && (
-                          <div className="mt-2 pt-2 border-t border-slate-100 flex items-center gap-1.5 text-[11px] text-emerald-700 font-semibold">
-                            <Trophy className="w-3.5 h-3.5 shrink-0" />
-                            <span className="truncate">Winner: {m.winner_name}</span>
-                          </div>
-                        )}
                       </div>
                     );
                   })
