@@ -17,7 +17,25 @@ export async function GET(request) {
     const leaderboard = getLeaderboard({ category, entityType });
     const history = getPointsHistory();
 
-    return NextResponse.json({ leaderboard, history });
+    const categories = [
+      "Men's Singles",
+      "Women's Singles",
+      "Men's Doubles",
+      "Women's Doubles",
+      "Mixed Doubles",
+    ];
+
+    const categoryLeaders = {};
+    for (const cat of categories) {
+      const topRecord = leaderboard.find((r) => r.category === cat) || null;
+      const count = leaderboard.filter((r) => r.category === cat).length;
+      categoryLeaders[cat] = {
+        leader: topRecord,
+        totalParticipants: count,
+      };
+    }
+
+    return NextResponse.json({ leaderboard, history, categoryLeaders, categories });
   } catch (err) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }

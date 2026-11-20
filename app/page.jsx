@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import PublicNavbar from "@/components/PublicNavbar";
 import PublicFooter from "@/components/PublicFooter";
@@ -20,8 +20,12 @@ import {
   Sparkles,
   MapPin,
   ChevronRight,
+  ChevronLeft,
+  ChevronsLeft,
+  ChevronsRight,
   ShieldCheck,
   Flame,
+  Crown,
 } from "lucide-react";
 
 function formatMatchDateTime(match) {
@@ -53,8 +57,49 @@ export default function HomePage() {
   const [settings, setSettings] = useState(null);
   const [players, setPlayers] = useState([]);
   const [leaderboard, setLeaderboard] = useState([]);
+  const [categoryLeaders, setCategoryLeaders] = useState({});
   const [selectedLiveMatch, setSelectedLiveMatch] = useState(null);
   const [leaderboardCategory, setLeaderboardCategory] = useState("All");
+
+  // Leaderboard Pagination State
+  const [lbPage, setLbPage] = useState(1);
+  const lbPageSize = 8;
+
+  const fetchLeaderboard = useCallback(() => {
+    fetch("/api/points", { cache: "no-store" })
+      .then((res) => (res.ok ? res.json() : {}))
+      .then((data) => {
+        const lb = data.leaderboard || [];
+        setLeaderboard(lb);
+
+        if (data.categoryLeaders && Object.keys(data.categoryLeaders).length > 0) {
+          setCategoryLeaders(data.categoryLeaders);
+        } else {
+          const leaders = {};
+          [
+            "Men's Singles",
+            "Women's Singles",
+            "Men's Doubles",
+            "Women's Doubles",
+            "Mixed Doubles",
+          ].forEach((cat) => {
+            const catRecords = lb
+              .filter((r) => r.category === cat)
+              .sort(
+                (a, b) =>
+                  (b.total_tournament_points || 0) - (a.total_tournament_points || 0) ||
+                  (b.matches_won || 0) - (a.matches_won || 0)
+              );
+            leaders[cat] = {
+              leader: catRecords[0] || null,
+              totalParticipants: catRecords.length,
+            };
+          });
+          setCategoryLeaders(leaders);
+        }
+      })
+      .catch((err) => console.error(err));
+  }, []);
 
   useEffect(() => {
     // Fetch settings
@@ -69,12 +114,29 @@ export default function HomePage() {
       .then((data) => setPlayers(data.players || []))
       .catch((err) => console.error(err));
 
-    // Fetch leaderboard
-    fetch("/api/points", { cache: "no-store" })
-      .then((res) => (res.ok ? res.json() : {}))
-      .then((data) => setLeaderboard(data.leaderboard || []))
-      .catch((err) => console.error(err));
-  }, []);
+    // Initial Leaderboard fetch
+    fetchLeaderboard();
+
+    // Real-time listener: re-fetch leaderboard when points or match completes
+    const handleSync = () => fetchLeaderboard();
+    window.addEventListener("live_match_score_updated", handleSync);
+    window.addEventListener("storage", (e) => {
+      if (e.key === "badminton_live_score_sync") fetchLeaderboard();
+    });
+
+    // Background interval: poll every 4s for fresh standings
+    const interval = setInterval(fetchLeaderboard, 4000);
+
+    return () => {
+      window.removeEventListener("live_match_score_updated", handleSync);
+      clearInterval(interval);
+    };
+  }, [fetchLeaderboard]);
+
+  // Reset pagination on category change
+  useEffect(() => {
+    setLbPage(1);
+  }, [leaderboardCategory]);
 
   const liveMatches = (matches || []).filter((m) => m.status === "live" || m.status === "tied");
   const upcomingMatches = (matches || []).filter(
@@ -82,10 +144,23 @@ export default function HomePage() {
   );
   const completedMatches = (matches || []).filter((m) => m.status === "completed");
 
+  // Keep modal in sync with live matches
+  const activeSelectedMatch = selectedLiveMatch
+    ? matches.find((m) => String(m.id || m._id) === String(selectedLiveMatch.id || selectedLiveMatch._id)) || selectedLiveMatch
+    : null;
+
   const filteredLeaderboard = (leaderboard || []).filter((item) => {
     if (leaderboardCategory === "All") return true;
     return item.category === leaderboardCategory;
   });
+
+  // Pagination metrics for leaderboard preview
+  const totalLbItems = filteredLeaderboard.length;
+  const totalLbPages = Math.max(1, Math.ceil(totalLbItems / lbPageSize));
+  const safeLbPage = Math.min(Math.max(1, lbPage), totalLbPages);
+  const startLbIdx = (safeLbPage - 1) * lbPageSize;
+  const endLbIdx = Math.min(startLbIdx + lbPageSize, totalLbItems);
+  const paginatedLeaderboard = filteredLeaderboard.slice(startLbIdx, endLbIdx);
 
   return (
     <div className="min-h-screen flex flex-col bg-background selection:bg-accent-light selection:text-accent">
@@ -225,14 +300,14 @@ export default function HomePage() {
         </section>
 
         {/* Modal: Live Court Details */}
-        {selectedLiveMatch && (
+        {activeSelectedMatch && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in">
             <div className="bg-white rounded-2xl max-w-3xl w-full border border-border shadow-elevated overflow-hidden max-h-[90vh] flex flex-col">
               <div className="p-4 border-b border-border flex items-center justify-between bg-slate-50">
                 <div className="flex items-center gap-2">
                   <span className="w-2.5 h-2.5 rounded-full bg-accent animate-pulse" />
                   <h3 className="font-heading font-black text-primary text-sm">
-                    Court {selectedLiveMatch.court_number} • {selectedLiveMatch.category} ({selectedLiveMatch.round})
+                    Court {activeSelectedMatch.court_number} • {activeSelectedMatch.category} ({activeSelectedMatch.round})
                   </h3>
                 </div>
                 <button
@@ -245,30 +320,30 @@ export default function HomePage() {
               </div>
 
               <div className="p-6 overflow-y-auto space-y-6">
-                <CourtVisualizer match={selectedLiveMatch} />
+                <CourtVisualizer match={activeSelectedMatch} />
 
                 {/* Score Summary Side-by-Side */}
                 <div className="grid grid-cols-2 gap-4 text-center">
                   <div className="p-4 rounded-xl bg-slate-50 border border-border">
-                    <p className="text-xs font-bold text-secondary mb-1 truncate">{selectedLiveMatch.team_a_name}</p>
+                    <p className="text-xs font-bold text-secondary mb-1 truncate">{activeSelectedMatch.team_a_name}</p>
                     <p className="text-4xl font-heading font-black text-primary">
-                      {selectedLiveMatch.score_a}
+                      {activeSelectedMatch.score_a}
                     </p>
-                    {selectedLiveMatch.serving_team === "A" && (
+                    {activeSelectedMatch.serving_team === "A" && (
                       <span className="inline-block mt-2 text-[10px] font-bold bg-accent-light text-accent border border-accent-border px-2 py-0.5 rounded-full">
-                        Serving ({selectedLiveMatch.service_court} box)
+                        Serving ({activeSelectedMatch.service_court} box)
                       </span>
                     )}
                   </div>
 
                   <div className="p-4 rounded-xl bg-slate-50 border border-border">
-                    <p className="text-xs font-bold text-secondary mb-1 truncate">{selectedLiveMatch.team_b_name}</p>
+                    <p className="text-xs font-bold text-secondary mb-1 truncate">{activeSelectedMatch.team_b_name}</p>
                     <p className="text-4xl font-heading font-black text-primary">
-                      {selectedLiveMatch.score_b}
+                      {activeSelectedMatch.score_b}
                     </p>
-                    {selectedLiveMatch.serving_team === "B" && (
+                    {activeSelectedMatch.serving_team === "B" && (
                       <span className="inline-block mt-2 text-[10px] font-bold bg-accent-light text-accent border border-accent-border px-2 py-0.5 rounded-full">
-                        Serving ({selectedLiveMatch.service_court} box)
+                        Serving ({activeSelectedMatch.service_court} box)
                       </span>
                     )}
                   </div>
@@ -280,10 +355,10 @@ export default function HomePage() {
                     Recent Rally History
                   </h4>
                   <div className="border border-border rounded-xl divide-y divide-border overflow-hidden bg-white max-h-48 overflow-y-auto">
-                    {(selectedLiveMatch.history || []).length === 0 ? (
+                    {(activeSelectedMatch.history || []).length === 0 ? (
                       <div className="p-3 text-xs text-muted text-center">No points logged yet.</div>
                     ) : (
-                      selectedLiveMatch.history
+                      activeSelectedMatch.history
                         .slice()
                         .reverse()
                         .map((evt, idx) => (
@@ -483,9 +558,16 @@ export default function HomePage() {
               </p>
             </div>
 
-            {/* Category Filter Pills */}
+            {/* Category Filter Pills (All 5 Categories) */}
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
-              {["All", "Men's Singles", "Women's Singles", "Men's Doubles"].map((cat) => (
+              {[
+                "All",
+                "Men's Singles",
+                "Women's Singles",
+                "Men's Doubles",
+                "Women's Doubles",
+                "Mixed Doubles",
+              ].map((cat) => (
                 <button
                   key={cat}
                   onClick={() => setLeaderboardCategory(cat)}
@@ -501,6 +583,64 @@ export default function HomePage() {
             </div>
           </div>
 
+          {/* Division Toppers Showcase Chips */}
+          <div className="mb-6">
+            <div className="flex items-center gap-2 mb-3">
+              <Crown className="w-4 h-4 text-amber-500" />
+              <h4 className="text-xs font-heading font-bold text-primary uppercase tracking-wider">
+                Category Toppers & Division Leaders
+              </h4>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+              {[
+                "Men's Singles",
+                "Women's Singles",
+                "Men's Doubles",
+                "Women's Doubles",
+                "Mixed Doubles",
+              ].map((cat) => {
+                const info = categoryLeaders[cat];
+                const leader = info?.leader;
+                const isSelected = leaderboardCategory === cat;
+
+                return (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => setLeaderboardCategory(cat)}
+                    className={`p-3.5 rounded-xl border text-left transition-all flex flex-col justify-between ${
+                      isSelected
+                        ? "bg-amber-50/70 border-amber-400/80 shadow-subtle ring-1 ring-amber-400"
+                        : "bg-white border-border hover:border-slate-300 hover:bg-slate-50 shadow-subtle"
+                    }`}
+                  >
+                    <div>
+                      <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider mb-1.5">
+                        <span className="text-muted truncate">{cat}</span>
+                        <span className="px-1.5 py-0.2 rounded-full bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-0.5 text-[9px]">
+                          <Crown className="w-2.5 h-2.5 text-amber-600" /> #1 Topper
+                        </span>
+                      </div>
+                      <div className="font-heading font-black text-xs text-primary truncate">
+                        {leader ? leader.entity_name : "Awaiting Result"}
+                      </div>
+                    </div>
+
+                    <div className="mt-2.5 pt-2 border-t border-border/60 flex items-center justify-between text-[11px]">
+                      <span className="text-muted">
+                        {leader ? `${leader.matches_won}W - ${leader.matches_lost}L` : "0 Played"}
+                      </span>
+                      <span className="font-mono font-bold text-teal-700">
+                        {leader ? `${leader.total_tournament_points} pts` : "0 pts"}
+                      </span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           <div className="bg-white rounded-2xl border border-border shadow-card overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
@@ -510,7 +650,8 @@ export default function HomePage() {
                     <th className="py-3.5 px-4">Participant</th>
                     <th className="py-3.5 px-4">Category</th>
                     <th className="py-3.5 px-4 text-center">Played</th>
-                    <th className="py-3.5 px-4 text-center">W / L</th>
+                    <th className="py-3.5 px-4 text-center">Wins</th>
+                    <th className="py-3.5 px-4 text-center">Losses</th>
                     <th className="py-3.5 px-4 text-center">Rally Points</th>
                     <th className="py-3.5 px-4 text-right">Tournament Pts</th>
                   </tr>
@@ -518,48 +659,129 @@ export default function HomePage() {
                 <tbody className="divide-y divide-border">
                   {filteredLeaderboard.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="py-10 text-center text-muted">
+                      <td colSpan={8} className="py-10 text-center text-muted">
                         No ranking entries found for this category yet.
                       </td>
                     </tr>
                   ) : (
-                    filteredLeaderboard.slice(0, 5).map((row, idx) => (
-                      <tr key={row.id || idx} className="hover:bg-slate-50/80 transition-colors">
-                        <td className="py-3.5 px-4 font-bold text-primary">
-                          {idx === 0 ? (
-                            <span className="w-6 h-6 rounded-full bg-amber-400 text-slate-950 inline-flex items-center justify-center text-xs font-heading font-black shadow-xs">
-                              1
-                            </span>
-                          ) : idx === 1 ? (
-                            <span className="w-6 h-6 rounded-full bg-slate-300 text-slate-900 inline-flex items-center justify-center text-xs font-heading font-black shadow-xs">
-                              2
-                            </span>
-                          ) : idx === 2 ? (
-                            <span className="w-6 h-6 rounded-full bg-amber-700 text-white inline-flex items-center justify-center text-xs font-heading font-black shadow-xs">
-                              3
-                            </span>
-                          ) : (
-                            <span className="text-muted ml-2 font-mono font-bold">{idx + 1}</span>
-                          )}
-                        </td>
-                        <td className="py-3.5 px-4 font-bold text-primary">{row.entity_name}</td>
-                        <td className="py-3.5 px-4 text-secondary">{row.category}</td>
-                        <td className="py-3.5 px-4 text-center text-secondary">{row.matches_played}</td>
-                        <td className="py-3.5 px-4 text-center font-bold text-slate-700">
-                          {row.matches_won} - {row.matches_lost}
-                        </td>
-                        <td className="py-3.5 px-4 text-center font-mono text-secondary">
-                          {row.points_scored} : {row.points_conceded}
-                        </td>
-                        <td className="py-3.5 px-4 text-right font-mono font-black text-accent text-sm">
-                          {row.total_tournament_points} pts
-                        </td>
-                      </tr>
-                    ))
+                    paginatedLeaderboard.map((row, idx) => {
+                      const absoluteRank = startLbIdx + idx + 1;
+                      const isTopper = absoluteRank === 1;
+
+                      return (
+                        <tr
+                          key={row.id || idx}
+                          className={`hover:bg-slate-50/80 transition-colors ${
+                            isTopper ? "bg-amber-50/30" : ""
+                          }`}
+                        >
+                          <td className="py-3.5 px-4 font-bold text-primary">
+                            {absoluteRank === 1 ? (
+                              <span className="w-6 h-6 rounded-full bg-amber-400 text-slate-950 inline-flex items-center justify-center text-xs font-heading font-black shadow-xs">
+                                1
+                              </span>
+                            ) : absoluteRank === 2 ? (
+                              <span className="w-6 h-6 rounded-full bg-slate-300 text-slate-900 inline-flex items-center justify-center text-xs font-heading font-black shadow-xs">
+                                2
+                              </span>
+                            ) : absoluteRank === 3 ? (
+                              <span className="w-6 h-6 rounded-full bg-amber-700 text-white inline-flex items-center justify-center text-xs font-heading font-black shadow-xs">
+                                3
+                              </span>
+                            ) : (
+                              <span className="text-muted ml-2 font-mono font-bold">
+                                {absoluteRank}
+                              </span>
+                            )}
+                          </td>
+                          <td className="py-3.5 px-4 font-bold text-primary">
+                            <div className="flex items-center gap-1.5">
+                              <span>{row.entity_name}</span>
+                              {isTopper && (
+                                <span className="inline-flex items-center gap-0.5 text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-amber-100 text-amber-900 border border-amber-300">
+                                  <Crown className="w-2.5 h-2.5 text-amber-600" /> #1 Topper
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="py-3.5 px-4 text-secondary">{row.category}</td>
+                          <td className="py-3.5 px-4 text-center text-secondary">
+                            {row.matches_played}
+                          </td>
+                          <td className="py-3.5 px-4 text-center font-bold text-teal-700">
+                            {row.matches_won}
+                          </td>
+                          <td className="py-3.5 px-4 text-center text-muted">
+                            {row.matches_lost}
+                          </td>
+                          <td className="py-3.5 px-4 text-center font-mono text-secondary">
+                            {row.points_scored} : {row.points_conceded}
+                          </td>
+                          <td className="py-3.5 px-4 text-right font-mono font-black text-accent text-sm">
+                            {row.total_tournament_points} pts
+                          </td>
+                        </tr>
+                      );
+                    })
                   )}
                 </tbody>
               </table>
             </div>
+
+            {/* Pagination Controls */}
+            {filteredLeaderboard.length > 0 && totalLbPages > 1 && (
+              <div className="px-4 py-3 border-t border-border bg-slate-50/70 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-secondary">
+                <div>
+                  Showing <span className="font-bold text-primary">{startLbIdx + 1}</span> to{" "}
+                  <span className="font-bold text-primary">{endLbIdx}</span> of{" "}
+                  <span className="font-bold text-primary">{totalLbItems}</span> standings
+                </div>
+
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setLbPage(1)}
+                    disabled={safeLbPage <= 1}
+                    className="p-1.5 rounded-lg border border-border bg-white text-primary hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    title="First Page"
+                  >
+                    <ChevronsLeft className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setLbPage((p) => Math.max(1, p - 1))}
+                    disabled={safeLbPage <= 1}
+                    className="p-1.5 rounded-lg border border-border bg-white text-primary hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    title="Previous Page"
+                  >
+                    <ChevronLeft className="w-3.5 h-3.5" />
+                  </button>
+
+                  <span className="px-3 font-semibold text-primary">
+                    Page {safeLbPage} of {totalLbPages}
+                  </span>
+
+                  <button
+                    type="button"
+                    onClick={() => setLbPage((p) => Math.min(totalLbPages, p + 1))}
+                    disabled={safeLbPage >= totalLbPages}
+                    className="p-1.5 rounded-lg border border-border bg-white text-primary hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    title="Next Page"
+                  >
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setLbPage(totalLbPages)}
+                    disabled={safeLbPage >= totalLbPages}
+                    className="p-1.5 rounded-lg border border-border bg-white text-primary hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    title="Last Page"
+                  >
+                    <ChevronsRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            )}
 
             <div className="p-3 bg-slate-50/50 border-t border-border text-center">
               <Link

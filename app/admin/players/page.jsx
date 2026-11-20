@@ -11,6 +11,10 @@ import {
   AlertCircle,
   X,
   ShieldAlert,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
 } from "lucide-react";
 
 export default function AdminPlayersPage() {
@@ -19,6 +23,10 @@ export default function AdminPlayersPage() {
   const [genderFilter, setGenderFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [loading, setLoading] = useState(true);
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   // Modal state
   const [modalOpen, setModalOpen] = useState(false);
@@ -173,6 +181,10 @@ export default function AdminPlayersPage() {
     }
   };
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, genderFilter, statusFilter, pageSize]);
+
   const filteredPlayers = players.filter((p) => {
     if (search) {
       const q = search.toLowerCase();
@@ -184,6 +196,28 @@ export default function AdminPlayersPage() {
     if (statusFilter && p.registration_status !== statusFilter) return false;
     return true;
   });
+
+  // Pagination calculations
+  const totalItems = filteredPlayers.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  const safeCurrentPage = Math.min(Math.max(1, currentPage), totalPages);
+  const startIndex = (safeCurrentPage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, totalItems);
+  const paginatedPlayers = filteredPlayers.slice(startIndex, endIndex);
+
+  // Generate numbered page buttons with smart windowing
+  const getPageNumbers = () => {
+    if (totalPages <= 7) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+    if (safeCurrentPage <= 4) {
+      return [1, 2, 3, 4, 5, "...", totalPages];
+    }
+    if (safeCurrentPage >= totalPages - 3) {
+      return [1, "...", totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+    }
+    return [1, "...", safeCurrentPage - 1, safeCurrentPage, safeCurrentPage + 1, "...", totalPages];
+  };
 
   return (
     <div className="space-y-6">
@@ -254,6 +288,8 @@ export default function AdminPlayersPage() {
                 <th className="py-3.5 px-4">Player</th>
                 <th className="py-3.5 px-4">Gender</th>
                 <th className="py-3.5 px-4">Eligible Categories</th>
+                <th className="py-3.5 px-4 text-center">Record (P / W / L)</th>
+                <th className="py-3.5 px-4 text-center">Tournament Pts</th>
                 <th className="py-3.5 px-4">Status</th>
                 <th className="py-3.5 px-4 text-right">Actions</th>
               </tr>
@@ -261,12 +297,12 @@ export default function AdminPlayersPage() {
             <tbody className="divide-y divide-border">
               {filteredPlayers.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center text-muted">
+                  <td colSpan={8} className="py-12 text-center text-muted">
                     No registered players match the search criteria.
                   </td>
                 </tr>
               ) : (
-                filteredPlayers.map((p) => (
+                paginatedPlayers.map((p) => (
                   <tr key={p.id} className="hover:bg-slate-50/70 transition-colors">
                     <td className="py-3.5 px-4 font-mono font-medium text-slate-500 text-[11px]">
                       {p.player_id}
@@ -302,6 +338,19 @@ export default function AdminPlayersPage() {
                         ))}
                       </div>
                     </td>
+                    <td className="py-3.5 px-4 text-center">
+                      <span className="font-semibold text-primary">{p.matches_played || 0}</span>
+                      <span className="text-muted text-[11px] mx-1">/</span>
+                      <span className="font-bold text-teal-700">{p.matches_won || 0}W</span>
+                      <span className="text-muted text-[11px] mx-1">/</span>
+                      <span className="text-muted">{p.matches_lost || 0}L</span>
+                      <span className="block text-[10px] text-muted font-medium mt-0.5">
+                        {p.win_rate !== undefined ? `${p.win_rate}% win` : (p.matches_played > 0 ? `${Math.round(((p.matches_won || 0) / p.matches_played) * 100)}%` : "0%")}
+                      </span>
+                    </td>
+                    <td className="py-3.5 px-4 text-center font-mono font-bold text-teal-700 text-xs">
+                      {p.tournament_points || 0} pts
+                    </td>
                     <td className="py-3.5 px-4">
                       <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-teal-800 bg-teal-50 px-2.5 py-0.5 rounded-full border border-teal-200">
                         <CheckCircle className="w-3 h-3 text-teal-600" />
@@ -334,6 +383,101 @@ export default function AdminPlayersPage() {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination Footer */}
+        {filteredPlayers.length > 0 && (
+          <div className="px-4 py-3.5 border-t border-border bg-slate-50/70 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-secondary">
+            {/* Showing Range & Page Size */}
+            <div className="flex flex-wrap items-center gap-3">
+              <span>
+                Showing <span className="font-bold text-primary">{startIndex + 1}</span> to{" "}
+                <span className="font-bold text-primary">{endIndex}</span> of{" "}
+                <span className="font-bold text-primary">{totalItems}</span> competitors
+              </span>
+              <div className="flex items-center gap-1.5 pl-3 border-l border-border">
+                <span className="text-[11px] text-muted">Per page:</span>
+                <select
+                  value={pageSize}
+                  onChange={(e) => {
+                    setPageSize(Number(e.target.value));
+                    setCurrentPage(1);
+                  }}
+                  className="py-1 px-2 border border-border rounded-lg bg-white text-xs font-semibold text-primary focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                >
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Pagination Controls */}
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => setCurrentPage(1)}
+                disabled={safeCurrentPage <= 1}
+                className="p-1.5 rounded-lg border border-border bg-white text-primary hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                title="First Page"
+              >
+                <ChevronsLeft className="w-3.5 h-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={safeCurrentPage <= 1}
+                className="p-1.5 rounded-lg border border-border bg-white text-primary hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                title="Previous Page"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+              </button>
+
+              {/* Page Numbers */}
+              <div className="flex items-center gap-1 px-1">
+                {getPageNumbers().map((page, idx) =>
+                  page === "..." ? (
+                    <span key={`dots-${idx}`} className="px-1.5 text-muted text-xs select-none">
+                      ...
+                    </span>
+                  ) : (
+                    <button
+                      key={page}
+                      type="button"
+                      onClick={() => setCurrentPage(page)}
+                      className={`min-w-7 h-7 px-2 rounded-lg text-xs font-semibold transition-all ${
+                        page === safeCurrentPage
+                          ? "bg-primary text-white shadow-xs"
+                          : "bg-white border border-border text-slate-700 hover:bg-slate-100"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  )
+                )}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={safeCurrentPage >= totalPages}
+                className="p-1.5 rounded-lg border border-border bg-white text-primary hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                title="Next Page"
+              >
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setCurrentPage(totalPages)}
+                disabled={safeCurrentPage >= totalPages}
+                className="p-1.5 rounded-lg border border-border bg-white text-primary hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                title="Last Page"
+              >
+                <ChevronsRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Modal: Add / Edit Player */}

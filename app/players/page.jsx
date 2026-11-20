@@ -3,7 +3,20 @@
 import { useState, useEffect } from "react";
 import PublicNavbar from "@/components/PublicNavbar";
 import PublicFooter from "@/components/PublicFooter";
-import { Search, Filter, Trophy, Users, ShieldCheck, Mail, MapPin, Award } from "lucide-react";
+import {
+  Search,
+  Filter,
+  Trophy,
+  Users,
+  ShieldCheck,
+  Mail,
+  MapPin,
+  Award,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+} from "lucide-react";
 
 export default function PlayersDirectoryPage() {
   const [players, setPlayers] = useState([]);
@@ -12,6 +25,10 @@ export default function PlayersDirectoryPage() {
   const [genderFilter, setGenderFilter] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [loading, setLoading] = useState(true);
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 12; // 3 columns x 4 rows
 
   useEffect(() => {
     Promise.allSettled([
@@ -36,6 +53,10 @@ export default function PlayersDirectoryPage() {
     "Mixed Doubles",
   ];
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, genderFilter, categoryFilter]);
+
   const filteredPlayers = players.filter((p) => {
     if (search) {
       const q = search.toLowerCase();
@@ -48,6 +69,21 @@ export default function PlayersDirectoryPage() {
     if (categoryFilter && (!p.eligible_categories || !p.eligible_categories.includes(categoryFilter))) return false;
     return true;
   });
+
+  // Pagination calculations
+  const totalItems = filteredPlayers.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  const safeCurrentPage = Math.min(Math.max(1, currentPage), totalPages);
+  const startIndex = (safeCurrentPage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, totalItems);
+  const paginatedPlayers = filteredPlayers.slice(startIndex, endIndex);
+
+  const getPageNumbers = () => {
+    if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1);
+    if (safeCurrentPage <= 4) return [1, 2, 3, 4, 5, "...", totalPages];
+    if (safeCurrentPage >= totalPages - 3) return [1, "...", totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+    return [1, "...", safeCurrentPage - 1, safeCurrentPage, safeCurrentPage + 1, "...", totalPages];
+  };
 
   // Calculate player stats from leaderboard
   const getPlayerStats = (playerId) => {
@@ -133,7 +169,7 @@ export default function PlayersDirectoryPage() {
               </p>
             </div>
           ) : (
-            filteredPlayers.map((p) => {
+            paginatedPlayers.map((p) => {
               const stats = getPlayerStats(p.id);
               const deptName = p.contact_phone ? p.contact_phone.replace("Dept: ", "") : null;
 
@@ -231,6 +267,80 @@ export default function PlayersDirectoryPage() {
             })
           )}
         </div>
+
+        {/* Public Pagination Bar */}
+        {filteredPlayers.length > 0 && totalPages > 1 && (
+          <div className="mt-10 p-4 rounded-2xl border border-border bg-white shadow-subtle flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-secondary">
+            <div>
+              Showing <span className="font-bold text-primary">{startIndex + 1}</span> to{" "}
+              <span className="font-bold text-primary">{endIndex}</span> of{" "}
+              <span className="font-bold text-primary">{totalItems}</span> athletes
+            </div>
+
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => setCurrentPage(1)}
+                disabled={safeCurrentPage <= 1}
+                className="p-2 rounded-xl border border-border bg-white text-primary hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                title="First Page"
+              >
+                <ChevronsLeft className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={safeCurrentPage <= 1}
+                className="p-2 rounded-xl border border-border bg-white text-primary hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                title="Previous Page"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+
+              <div className="flex items-center gap-1 px-1">
+                {getPageNumbers().map((page, idx) =>
+                  page === "..." ? (
+                    <span key={`dots-${idx}`} className="px-2 text-muted text-xs select-none">
+                      ...
+                    </span>
+                  ) : (
+                    <button
+                      key={page}
+                      type="button"
+                      onClick={() => setCurrentPage(page)}
+                      className={`min-w-8 h-8 px-2.5 rounded-xl text-xs font-bold transition-all ${
+                        page === safeCurrentPage
+                          ? "bg-primary text-white shadow-subtle"
+                          : "bg-white border border-border text-slate-700 hover:bg-slate-50"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  )
+                )}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={safeCurrentPage >= totalPages}
+                className="p-2 rounded-xl border border-border bg-white text-primary hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                title="Next Page"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setCurrentPage(totalPages)}
+                disabled={safeCurrentPage >= totalPages}
+                className="p-2 rounded-xl border border-border bg-white text-primary hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                title="Last Page"
+              >
+                <ChevronsRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
       </main>
 
       <PublicFooter />

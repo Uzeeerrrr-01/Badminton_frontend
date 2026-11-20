@@ -1,7 +1,20 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { UserCheck, Plus, Search, Edit2, Trash2, AlertCircle, X, Users } from "lucide-react";
+import {
+  UserCheck,
+  Plus,
+  Search,
+  Edit2,
+  Trash2,
+  AlertCircle,
+  X,
+  Users,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+} from "lucide-react";
 import SearchablePlayerSelect from "@/components/SearchablePlayerSelect";
 
 export default function AdminTeamsPage() {
@@ -10,6 +23,10 @@ export default function AdminTeamsPage() {
   const [categoryFilter, setCategoryFilter] = useState("");
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 9; // 3 columns x 3 rows
 
   // Modal
   const [modalOpen, setModalOpen] = useState(false);
@@ -139,11 +156,30 @@ export default function AdminTeamsPage() {
     }
   };
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, categoryFilter]);
+
   const filteredTeams = teams.filter((t) => {
     if (categoryFilter && t.category !== categoryFilter) return false;
     if (search && !t.name.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
+
+  // Pagination calculations
+  const totalItems = filteredTeams.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  const safeCurrentPage = Math.min(Math.max(1, currentPage), totalPages);
+  const startIndex = (safeCurrentPage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, totalItems);
+  const paginatedTeams = filteredTeams.slice(startIndex, endIndex);
+
+  const getPageNumbers = () => {
+    if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1);
+    if (safeCurrentPage <= 4) return [1, 2, 3, 4, 5, "...", totalPages];
+    if (safeCurrentPage >= totalPages - 3) return [1, "...", totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+    return [1, "...", safeCurrentPage - 1, safeCurrentPage, safeCurrentPage + 1, "...", totalPages];
+  };
 
   return (
     <div className="space-y-6">
@@ -200,7 +236,7 @@ export default function AdminTeamsPage() {
             No doubles teams configured yet.
           </div>
         ) : (
-          filteredTeams.map((t) => (
+          paginatedTeams.map((t) => (
             <div
               key={t.id}
               className="p-5 rounded-2xl border border-border bg-white shadow-subtle hover:border-slate-300 transition-all flex flex-col justify-between"
@@ -228,6 +264,26 @@ export default function AdminTeamsPage() {
                     </span>
                   </div>
                 </div>
+
+                {/* Team Performance Stats Bar */}
+                <div className="mt-3 pt-3 border-t border-border/80 grid grid-cols-4 gap-1.5 text-center text-[11px]">
+                  <div className="p-1.5 rounded-lg bg-slate-50 border border-border/60">
+                    <span className="text-[9px] uppercase font-bold text-muted block">Played</span>
+                    <span className="font-heading font-black text-primary">{t.matches_played || 0}</span>
+                  </div>
+                  <div className="p-1.5 rounded-lg bg-slate-50 border border-border/60">
+                    <span className="text-[9px] uppercase font-bold text-muted block">Won</span>
+                    <span className="font-heading font-black text-teal-700">{t.matches_won || 0}</span>
+                  </div>
+                  <div className="p-1.5 rounded-lg bg-slate-50 border border-border/60">
+                    <span className="text-[9px] uppercase font-bold text-muted block">Lost</span>
+                    <span className="font-heading font-black text-muted">{t.matches_lost || 0}</span>
+                  </div>
+                  <div className="p-1.5 rounded-lg bg-slate-50 border border-border/60">
+                    <span className="text-[9px] uppercase font-bold text-muted block">Points</span>
+                    <span className="font-heading font-black text-teal-700">{t.tournament_points || 0}</span>
+                  </div>
+                </div>
               </div>
 
               <div className="pt-4 mt-4 border-t border-border flex items-center justify-end gap-1">
@@ -252,6 +308,80 @@ export default function AdminTeamsPage() {
           ))
         )}
       </div>
+
+      {/* Pagination Footer */}
+      {filteredTeams.length > 0 && totalPages > 1 && (
+        <div className="p-4 rounded-2xl border border-border bg-white shadow-subtle flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-secondary">
+          <div>
+            Showing <span className="font-bold text-primary">{startIndex + 1}</span> to{" "}
+            <span className="font-bold text-primary">{endIndex}</span> of{" "}
+            <span className="font-bold text-primary">{totalItems}</span> pairs
+          </div>
+
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => setCurrentPage(1)}
+              disabled={safeCurrentPage <= 1}
+              className="p-1.5 rounded-lg border border-border bg-white text-primary hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              title="First Page"
+            >
+              <ChevronsLeft className="w-3.5 h-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={safeCurrentPage <= 1}
+              className="p-1.5 rounded-lg border border-border bg-white text-primary hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              title="Previous Page"
+            >
+              <ChevronLeft className="w-3.5 h-3.5" />
+            </button>
+
+            <div className="flex items-center gap-1 px-1">
+              {getPageNumbers().map((page, idx) =>
+                page === "..." ? (
+                  <span key={`dots-${idx}`} className="px-1.5 text-muted text-xs select-none">
+                    ...
+                  </span>
+                ) : (
+                  <button
+                    key={page}
+                    type="button"
+                    onClick={() => setCurrentPage(page)}
+                    className={`min-w-7 h-7 px-2 rounded-lg text-xs font-semibold transition-all ${
+                      page === safeCurrentPage
+                        ? "bg-primary text-white shadow-xs"
+                        : "bg-white border border-border text-slate-700 hover:bg-slate-50"
+                    }`}
+                  >
+                    {page}
+                  </button>
+                )
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={safeCurrentPage >= totalPages}
+              className="p-1.5 rounded-lg border border-border bg-white text-primary hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              title="Next Page"
+            >
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setCurrentPage(totalPages)}
+              disabled={safeCurrentPage >= totalPages}
+              className="p-1.5 rounded-lg border border-border bg-white text-primary hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              title="Last Page"
+            >
+              <ChevronsRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Modal */}
       {modalOpen && (
