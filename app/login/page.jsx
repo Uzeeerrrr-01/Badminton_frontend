@@ -22,6 +22,7 @@ export default function LoginPage() {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ email, password }),
       });
 
@@ -30,8 +31,7 @@ export default function LoginPage() {
         throw new Error(data.error || "Login failed");
       }
 
-      router.push("/admin");
-      router.refresh();
+      window.location.href = "/admin";
     } catch (err) {
       setError(err.message);
     } finally {

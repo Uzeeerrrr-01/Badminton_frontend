@@ -14,7 +14,7 @@ export default function AdminLayout({ children }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
-    fetch("/api/auth/me")
+    fetch("/api/auth/me", { cache: "no-store", credentials: "include" })
       .then((res) => {
         if (!res.ok) {
           router.push("/login");
@@ -23,8 +23,8 @@ export default function AdminLayout({ children }) {
         return res.json();
       })
       .then((data) => {
-        if (data?.authenticated) {
-          setUser(data.user);
+        if (data?.authenticated || data?.admin || data?.user) {
+          setUser(data.user || data.admin);
         } else {
           router.push("/login");
         }
