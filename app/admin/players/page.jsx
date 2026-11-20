@@ -480,6 +480,7 @@ export default function AdminPlayersPage() {
           </div>
         )}
       </div>
+      </div>
 
       {/* Modal: Add / Edit Player */}
       {modalOpen && (
