@@ -50,9 +50,9 @@ export default function AdminLayout({ children }) {
   }
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row bg-background">
-      {/* Mobile Top Header */}
-      <div className="md:hidden flex items-center justify-between px-4 h-14 bg-primary text-white border-b border-secondary shrink-0 z-40">
+    <div className="min-h-screen bg-background">
+      {/* Mobile Top Header (Sticky) */}
+      <div className="md:hidden sticky top-0 z-40 flex items-center justify-between px-4 h-14 bg-primary text-white border-b border-secondary shrink-0">
         <Link href="/admin" className="flex items-center gap-2">
           <span className="w-6 h-6 rounded-md bg-teal-500/20 border border-teal-400/30 flex items-center justify-center text-teal-400 font-bold text-xs">
             A
@@ -71,10 +71,10 @@ export default function AdminLayout({ children }) {
         </button>
       </div>
 
-      {/* Desktop Sidebar */}
-      <div className="hidden md:block">
+      {/* Fixed Desktop Sidebar (Permanently pinned to the left) */}
+      <aside className="hidden md:flex md:fixed md:inset-y-0 md:left-0 md:w-64 md:z-30 md:flex-col border-r border-border bg-white shadow-subtle">
         <AdminSidebar user={user} />
-      </div>
+      </aside>
 
       {/* Mobile Sidebar Overlay Drawer */}
       {mobileMenuOpen && (
@@ -89,8 +89,8 @@ export default function AdminLayout({ children }) {
         </div>
       )}
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
+      {/* Main Content Area (offset with md:pl-64 to clear the fixed sidebar) */}
+      <div className="md:pl-64 flex flex-col min-w-0 min-h-screen">
         <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
           {children}
         </main>

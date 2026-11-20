@@ -597,17 +597,22 @@ export default function AdminPointsPage() {
 
       {/* Traceable History Log */}
       <div>
-        <div className="flex items-center gap-2 mb-3">
-          <History className="w-4 h-4 text-primary" />
-          <h2 className="text-xs font-heading font-bold text-primary uppercase tracking-wider">
-            Traceable Points Adjustment History
-          </h2>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+          <div className="flex items-center gap-2">
+            <History className="w-4 h-4 text-primary" />
+            <h2 className="text-xs font-heading font-bold text-primary uppercase tracking-wider">
+              Traceable Points Adjustment History
+            </h2>
+          </div>
+          <span className="text-[11px] text-muted">
+            Official audit ledger: tracks automated match victory & participation awards alongside manual referee adjustments
+          </span>
         </div>
 
         <div className="bg-white rounded-2xl border border-border shadow-subtle divide-y divide-border max-h-80 overflow-y-auto">
           {history.length === 0 ? (
             <div className="p-8 text-center text-xs text-muted">
-              No manual adjustments logged in the tournament ledger.
+              No points adjustments or match awards recorded yet.
             </div>
           ) : (
             history.map((h) => (

@@ -40,7 +40,7 @@ export default function AdminSidebar({ user }) {
   ];
 
   return (
-    <aside className="w-64 bg-white border-r border-border min-h-screen flex flex-col justify-between shrink-0 shadow-subtle select-none">
+    <div className="w-full h-full bg-white flex flex-col justify-between shrink-0 select-none overflow-y-auto">
       <div>
         {/* Brand Header */}
         <div className="h-16 px-5 border-b border-border flex items-center justify-between bg-white text-primary">
@@ -138,6 +138,6 @@ export default function AdminSidebar({ user }) {
           </button>
         </div>
       </div>
-    </aside>
+    </div>
   );
 }
