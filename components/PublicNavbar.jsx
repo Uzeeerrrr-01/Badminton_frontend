@@ -94,8 +94,15 @@ export default function PublicNavbar() {
           </Link>
         </div>
 
-        {/* Mobile menu toggle */}
+        {/* Mobile menu */}
         <div className="flex md:hidden items-center gap-2">
+          <Link
+            href={isAdmin ? "/admin" : "/login"}
+            className="p-1.5 rounded-lg text-secondary hover:text-primary hover:bg-slate-100 transition-colors"
+            title={isAdmin ? "Admin Console" : "Umpire Portal"}
+          >
+            <Shield className="w-4 h-4 text-accent" />
+          </Link>
           <button
             type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -107,9 +114,9 @@ export default function PublicNavbar() {
         </div>
       </div>
 
-      {/* Mobile menu */}
+      {/* Mobile menu dropdown */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-b border-border bg-white px-4 pt-3 pb-4 space-y-2">
+        <div className="md:hidden border-b border-border bg-white/95 backdrop-blur-md px-4 pt-3 pb-4 space-y-1.5 shadow-lg animate-in slide-in-from-top-2 duration-150">
           {navLinks.map((link) => {
             const isActive = pathname === link.href;
             return (
@@ -117,21 +124,29 @@ export default function PublicNavbar() {
                 key={link.href}
                 href={link.href}
                 onClick={() => setMobileMenuOpen(false)}
-                className={`block px-3 py-2 rounded-xl text-sm font-semibold transition-colors ${
+                className={`flex items-center justify-between min-h-[44px] px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
                   isActive
-                    ? "bg-accent-light text-accent"
+                    ? "bg-accent-light text-accent font-bold"
                     : "text-secondary hover:bg-slate-50 hover:text-primary"
                 }`}
               >
-                {link.label}
+                <span className="flex items-center gap-2">
+                  <span>{link.label}</span>
+                  {link.hasBadge && (
+                    <span className="w-2 h-2 rounded-full bg-accent animate-ping" />
+                  )}
+                </span>
+                {isActive && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-accent" />
+                )}
               </Link>
             );
           })}
-          <div className="pt-2 border-t border-border">
+          <div className="pt-2.5 border-t border-border">
             <Link
               href={isAdmin ? "/admin" : "/login"}
               onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center justify-between px-3 py-2 rounded-xl text-sm font-semibold text-secondary hover:text-primary hover:bg-slate-50"
+              className="flex items-center justify-between min-h-[44px] px-3.5 py-2.5 rounded-xl text-sm font-semibold text-secondary hover:text-primary hover:bg-slate-50"
             >
               <span className="flex items-center gap-2">
                 <Shield className="w-4 h-4 text-accent" />

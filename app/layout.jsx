@@ -5,6 +5,12 @@ export const metadata = {
   description: "Official Badminton Tournament Management Portal with real-time scoring, knockout brackets, and player leaderboards.",
 };
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+};
+
 export default function RootLayout({ children }) {
   return (
     <html lang="en">

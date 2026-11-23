@@ -217,33 +217,33 @@ export default function HomePage() {
               </div>
 
               {/* Tournament Title */}
-              <h1 className="text-4xl sm:text-6xl font-heading font-black tracking-tight leading-[1.08] text-primary">
+              <h1 className="text-3xl sm:text-5xl lg:text-6xl font-heading font-black tracking-tight leading-[1.1] text-primary">
                 {settings?.name || "Apex Badminton Open 2026"}
               </h1>
 
               {/* Tagline */}
-              <p className="mt-4 text-xl sm:text-2xl font-heading font-bold text-accent tracking-tight">
+              <p className="mt-3 sm:mt-4 text-lg sm:text-2xl font-heading font-bold text-accent tracking-tight">
                 Every Point. Every Rally. Every Victory.
               </p>
 
               {/* Description */}
-              <p className="mt-3 text-sm sm:text-base text-secondary leading-relaxed max-w-2xl">
+              <p className="mt-2.5 sm:mt-3 text-xs sm:text-base text-secondary leading-relaxed max-w-2xl">
                 {settings?.description ||
                   "Follow live court scoring, instantaneous umpire updates, official knockout brackets, and player leaderboards throughout the championship."}
               </p>
 
               {/* Tournament KPI Badges */}
-              <div className="mt-8 flex flex-wrap items-center gap-3 text-xs font-semibold text-secondary">
-                <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-border shadow-subtle">
-                  <MapPin className="w-4 h-4 text-accent" />
+              <div className="mt-6 sm:mt-8 flex flex-wrap items-center gap-2 sm:gap-3 text-xs font-semibold text-secondary">
+                <div className="flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-white border border-border shadow-subtle text-[11px] sm:text-xs">
+                  <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-accent shrink-0" />
                   <span className="text-primary font-bold">{settings?.venue || "Grand Court Arena"}</span>
                 </div>
-                <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-border shadow-subtle">
-                  <Activity className="w-4 h-4 text-accent" />
+                <div className="flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-white border border-border shadow-subtle text-[11px] sm:text-xs">
+                  <Activity className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-accent shrink-0" />
                   <span>{settings?.number_of_courts || 4} Dedicated Courts</span>
                 </div>
-                <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-border shadow-subtle">
-                  <ShieldCheck className="w-4 h-4 text-accent" />
+                <div className="flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-white border border-border shadow-subtle text-[11px] sm:text-xs">
+                  <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-accent shrink-0" />
                   <span>Sudden-Death & Deuce Rules</span>
                 </div>
               </div>
@@ -301,48 +301,48 @@ export default function HomePage() {
 
         {/* Modal: Live Court Details */}
         {activeSelectedMatch && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in">
-            <div className="bg-white rounded-2xl max-w-3xl w-full border border-border shadow-elevated overflow-hidden max-h-[90vh] flex flex-col">
-              <div className="p-4 border-b border-border flex items-center justify-between bg-slate-50">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in">
+            <div className="bg-white rounded-2xl max-w-3xl w-full border border-border shadow-elevated overflow-hidden max-h-[92vh] flex flex-col">
+              <div className="p-3.5 sm:p-4 border-b border-border flex items-center justify-between bg-slate-50">
                 <div className="flex items-center gap-2">
                   <span className="w-2.5 h-2.5 rounded-full bg-accent animate-pulse" />
-                  <h3 className="font-heading font-black text-primary text-sm">
+                  <h3 className="font-heading font-black text-primary text-xs sm:text-sm">
                     Court {activeSelectedMatch.court_number} • {activeSelectedMatch.category} ({activeSelectedMatch.round})
                   </h3>
                 </div>
                 <button
                   type="button"
                   onClick={() => setSelectedLiveMatch(null)}
-                  className="p-1 rounded-lg text-secondary hover:text-primary hover:bg-slate-200 transition-colors"
+                  className="p-1.5 rounded-lg text-secondary hover:text-primary hover:bg-slate-200 transition-colors"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
-              <div className="p-6 overflow-y-auto space-y-6">
+              <div className="p-3.5 sm:p-6 overflow-y-auto space-y-4 sm:space-y-6">
                 <CourtVisualizer match={activeSelectedMatch} />
 
                 {/* Score Summary Side-by-Side */}
-                <div className="grid grid-cols-2 gap-4 text-center">
-                  <div className="p-4 rounded-xl bg-slate-50 border border-border">
+                <div className="grid grid-cols-2 gap-3 sm:gap-4 text-center">
+                  <div className="p-3 sm:p-4 rounded-xl bg-slate-50 border border-border">
                     <p className="text-xs font-bold text-secondary mb-1 truncate">{activeSelectedMatch.team_a_name}</p>
-                    <p className="text-4xl font-heading font-black text-primary">
+                    <p className="text-3xl sm:text-4xl font-heading font-black text-primary">
                       {activeSelectedMatch.score_a}
                     </p>
                     {activeSelectedMatch.serving_team === "A" && (
-                      <span className="inline-block mt-2 text-[10px] font-bold bg-accent-light text-accent border border-accent-border px-2 py-0.5 rounded-full">
+                      <span className="inline-block mt-2 text-[9px] sm:text-[10px] font-bold bg-accent-light text-accent border border-accent-border px-2 py-0.5 rounded-full">
                         Serving ({activeSelectedMatch.service_court} box)
                       </span>
                     )}
                   </div>
 
-                  <div className="p-4 rounded-xl bg-slate-50 border border-border">
+                  <div className="p-3 sm:p-4 rounded-xl bg-slate-50 border border-border">
                     <p className="text-xs font-bold text-secondary mb-1 truncate">{activeSelectedMatch.team_b_name}</p>
-                    <p className="text-4xl font-heading font-black text-primary">
+                    <p className="text-3xl sm:text-4xl font-heading font-black text-primary">
                       {activeSelectedMatch.score_b}
                     </p>
                     {activeSelectedMatch.serving_team === "B" && (
-                      <span className="inline-block mt-2 text-[10px] font-bold bg-accent-light text-accent border border-accent-border px-2 py-0.5 rounded-full">
+                      <span className="inline-block mt-2 text-[9px] sm:text-[10px] font-bold bg-accent-light text-accent border border-accent-border px-2 py-0.5 rounded-full">
                         Serving ({activeSelectedMatch.service_court} box)
                       </span>
                     )}
@@ -362,9 +362,9 @@ export default function HomePage() {
                         .slice()
                         .reverse()
                         .map((evt, idx) => (
-                          <div key={idx} className="p-2.5 text-xs flex items-center justify-between">
-                            <span className="font-medium text-slate-700">{evt.event}</span>
-                            <span className="font-mono text-slate-500 font-semibold">
+                          <div key={idx} className="p-2 sm:p-2.5 text-xs flex items-center justify-between">
+                            <span className="font-medium text-slate-700 truncate pr-2">{evt.event}</span>
+                            <span className="font-mono text-slate-500 font-semibold shrink-0">
                               {evt.scoreA} - {evt.scoreB}
                             </span>
                           </div>
@@ -488,14 +488,14 @@ export default function HomePage() {
                           <span>{m.category} • {m.round}</span>
                         </div>
 
-                        <div className="flex items-center justify-between text-sm pt-1">
-                          <span className={`truncate pr-2 ${m.winner_team === "A" ? "font-bold text-primary" : "text-muted"}`}>
+                        <div className="flex items-center justify-between text-sm pt-1 gap-2">
+                          <span className={`min-w-0 flex-1 truncate pr-1 ${m.winner_team === "A" ? "font-bold text-primary" : "text-muted"}`}>
                             {m.team_a_name}
                           </span>
-                          <div className="font-heading font-black text-base px-3 py-0.5 rounded-lg bg-slate-100 text-primary shrink-0 tabular-nums">
+                          <div className="font-heading font-black text-xs sm:text-base px-2.5 sm:px-3 py-0.5 rounded-lg bg-slate-100 text-primary shrink-0 tabular-nums border border-border">
                             {m.score_a} : {m.score_b}
                           </div>
-                          <span className={`truncate pl-2 text-right ${m.winner_team === "B" ? "font-bold text-primary" : "text-muted"}`}>
+                          <span className={`min-w-0 flex-1 truncate pl-1 text-right ${m.winner_team === "B" ? "font-bold text-primary" : "text-muted"}`}>
                             {m.team_b_name}
                           </span>
                         </div>
@@ -559,7 +559,7 @@ export default function HomePage() {
             </div>
 
             {/* Category Filter Pills (All 5 Categories) */}
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-2 scrollbar-none -mx-4 px-4 sm:mx-0 sm:px-0">
               {[
                 "All",
                 "Men's Singles",
@@ -592,7 +592,7 @@ export default function HomePage() {
               </h4>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-2.5 sm:gap-3">
               {[
                 "Men's Singles",
                 "Women's Singles",
@@ -609,17 +609,17 @@ export default function HomePage() {
                     key={cat}
                     type="button"
                     onClick={() => setLeaderboardCategory(cat)}
-                    className={`p-3.5 rounded-xl border text-left transition-all flex flex-col justify-between ${
+                    className={`p-2.5 sm:p-3.5 rounded-xl border text-left transition-all flex flex-col justify-between last:col-span-2 lg:last:col-span-1 ${
                       isSelected
                         ? "bg-amber-50/70 border-amber-400/80 shadow-subtle ring-1 ring-amber-400"
                         : "bg-white border-border hover:border-slate-300 hover:bg-slate-50 shadow-subtle"
                     }`}
                   >
                     <div>
-                      <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider mb-1.5">
+                      <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider mb-1.5 gap-1">
                         <span className="text-muted truncate">{cat}</span>
-                        <span className="px-1.5 py-0.2 rounded-full bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-0.5 text-[9px]">
-                          <Crown className="w-2.5 h-2.5 text-amber-600" /> #1 Topper
+                        <span className="px-1.5 py-0.2 rounded-full bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-0.5 text-[9px] shrink-0">
+                          <Crown className="w-2.5 h-2.5 text-amber-600" /> #1
                         </span>
                       </div>
                       <div className="font-heading font-black text-xs text-primary truncate">
@@ -627,11 +627,11 @@ export default function HomePage() {
                       </div>
                     </div>
 
-                    <div className="mt-2.5 pt-2 border-t border-border/60 flex items-center justify-between text-[11px]">
-                      <span className="text-muted">
+                    <div className="mt-2 pt-1.5 border-t border-border/60 flex items-center justify-between text-[11px]">
+                      <span className="text-muted text-[10px] sm:text-[11px]">
                         {leader ? `${leader.matches_won}W - ${leader.matches_lost}L` : "0 Played"}
                       </span>
-                      <span className="font-mono font-bold text-teal-700">
+                      <span className="font-mono font-bold text-teal-700 text-xs">
                         {leader ? `${leader.total_tournament_points} pts` : "0 pts"}
                       </span>
                     </div>
@@ -642,7 +642,8 @@ export default function HomePage() {
           </div>
 
           <div className="bg-white rounded-2xl border border-border shadow-card overflow-hidden">
-            <div className="overflow-x-auto">
+            {/* Desktop Table View (>= 768px) */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead className="bg-slate-50 border-b border-border text-secondary font-heading font-black uppercase tracking-wider text-[11px]">
                   <tr>
@@ -728,10 +729,86 @@ export default function HomePage() {
               </table>
             </div>
 
+            {/* Mobile Card List View (< 768px screens) */}
+            <div className="md:hidden divide-y divide-border">
+              {filteredLeaderboard.length === 0 ? (
+                <div className="py-10 text-center text-xs text-muted">
+                  No ranking entries found for this category yet.
+                </div>
+              ) : (
+                paginatedLeaderboard.map((row, idx) => {
+                  const absoluteRank = startLbIdx + idx + 1;
+                  const isTopper = absoluteRank === 1;
+
+                  return (
+                    <div
+                      key={row.id || idx}
+                      className={`p-3.5 flex items-center justify-between gap-3 ${
+                        isTopper ? "bg-amber-50/40" : "bg-white"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="shrink-0">
+                          {absoluteRank === 1 ? (
+                            <span className="w-6 h-6 rounded-full bg-amber-400 text-slate-950 inline-flex items-center justify-center text-xs font-heading font-black shadow-xs">
+                              1
+                            </span>
+                          ) : absoluteRank === 2 ? (
+                            <span className="w-6 h-6 rounded-full bg-slate-300 text-slate-900 inline-flex items-center justify-center text-xs font-heading font-black shadow-xs">
+                              2
+                            </span>
+                          ) : absoluteRank === 3 ? (
+                            <span className="w-6 h-6 rounded-full bg-amber-700 text-white inline-flex items-center justify-center text-xs font-heading font-black shadow-xs">
+                              3
+                            </span>
+                          ) : (
+                            <span className="w-6 h-6 rounded-full bg-slate-100 text-slate-600 inline-flex items-center justify-center text-xs font-mono font-bold">
+                              {absoluteRank}
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="font-heading font-bold text-xs sm:text-sm text-primary truncate">
+                              {row.entity_name}
+                            </span>
+                            {isTopper && (
+                              <span className="inline-flex items-center gap-0.5 text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-amber-100 text-amber-900 border border-amber-300">
+                                <Crown className="w-2.5 h-2.5 text-amber-600" /> #1
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2 mt-0.5 text-[11px] text-muted flex-wrap">
+                            <span className="font-medium text-slate-700">{row.category}</span>
+                            <span>•</span>
+                            <span className="font-bold text-teal-700">{row.matches_won}W</span>
+                            <span>-</span>
+                            <span>{row.matches_lost}L</span>
+                            <span>•</span>
+                            <span className="font-mono text-slate-500">{row.points_scored}:{row.points_conceded}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="text-right shrink-0">
+                        <div className="font-mono font-black text-accent text-sm sm:text-base">
+                          {row.total_tournament_points} pts
+                        </div>
+                        <span className="text-[10px] text-muted font-medium">
+                          {row.matches_played} played
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
             {/* Pagination Controls */}
             {filteredLeaderboard.length > 0 && totalLbPages > 1 && (
-              <div className="px-4 py-3 border-t border-border bg-slate-50/70 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-secondary">
-                <div>
+              <div className="px-3.5 sm:px-4 py-3 border-t border-border bg-slate-50/70 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-secondary">
+                <div className="text-center sm:text-left text-[11px] sm:text-xs">
                   Showing <span className="font-bold text-primary">{startLbIdx + 1}</span> to{" "}
                   <span className="font-bold text-primary">{endLbIdx}</span> of{" "}
                   <span className="font-bold text-primary">{totalLbItems}</span> standings
@@ -757,7 +834,7 @@ export default function HomePage() {
                     <ChevronLeft className="w-3.5 h-3.5" />
                   </button>
 
-                  <span className="px-3 font-semibold text-primary">
+                  <span className="px-2.5 font-semibold text-primary text-xs">
                     Page {safeLbPage} of {totalLbPages}
                   </span>
 

@@ -100,12 +100,12 @@ export default function MatchesPage() {
         </div>
 
         {/* Filter Controls Bar */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-3.5 rounded-2xl border border-border bg-white shadow-subtle mb-8">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4 p-3 sm:p-3.5 rounded-2xl border border-border bg-white shadow-subtle mb-6 sm:mb-8">
           {/* Status Tabs */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-2 md:pb-0 scrollbar-none -mx-1 px-1">
             <button
               onClick={() => setStatusFilter("all")}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+              className={`px-3 sm:px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
                 statusFilter === "all"
                   ? "bg-primary text-white shadow-subtle"
                   : "text-secondary hover:text-primary hover:bg-slate-50"
@@ -115,7 +115,7 @@ export default function MatchesPage() {
             </button>
             <button
               onClick={() => setStatusFilter("live")}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+              className={`px-3 sm:px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 ${
                 statusFilter === "live"
                   ? "bg-accent text-white shadow-emerald"
                   : "text-secondary hover:text-accent hover:bg-accent-light/50"
@@ -126,7 +126,7 @@ export default function MatchesPage() {
             </button>
             <button
               onClick={() => setStatusFilter("upcoming")}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+              className={`px-3 sm:px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
                 statusFilter === "upcoming"
                   ? "bg-primary text-white shadow-subtle"
                   : "text-secondary hover:text-primary hover:bg-slate-50"
@@ -136,7 +136,7 @@ export default function MatchesPage() {
             </button>
             <button
               onClick={() => setStatusFilter("completed")}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+              className={`px-3 sm:px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
                 statusFilter === "completed"
                   ? "bg-primary text-white shadow-subtle"
                   : "text-secondary hover:text-primary hover:bg-slate-50"
@@ -147,12 +147,12 @@ export default function MatchesPage() {
           </div>
 
           {/* Category Filter */}
-          <div className="flex items-center gap-2">
-            <Filter className="w-3.5 h-3.5 text-secondary" />
+          <div className="flex items-center gap-2 w-full md:w-auto">
+            <Filter className="w-3.5 h-3.5 text-secondary shrink-0" />
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              className="text-xs px-3 py-1.5 border border-border rounded-xl bg-slate-50 text-primary font-semibold focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors"
+              className="text-xs px-3 py-1.5 border border-border rounded-xl bg-slate-50 text-primary font-semibold focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors w-full md:w-auto"
             >
               <option value="all">All Categories</option>
               {categories.map((c) => (
@@ -165,9 +165,9 @@ export default function MatchesPage() {
         </div>
 
         {/* Matches Grid */}
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {filteredMatches.length === 0 ? (
-            <div className="p-16 text-center rounded-2xl border border-dashed border-border bg-white shadow-subtle">
+            <div className="p-10 sm:p-16 text-center rounded-2xl border border-dashed border-border bg-white shadow-subtle">
               <div className="w-12 h-12 rounded-full bg-slate-100 mx-auto flex items-center justify-center mb-3">
                 <Clock className="w-6 h-6 text-slate-400" />
               </div>
@@ -194,22 +194,22 @@ export default function MatchesPage() {
               return (
                 <div
                   key={m.id}
-                  className="p-6 rounded-2xl border border-border bg-white shadow-card hover:shadow-elevated hover:border-slate-300 transition-all"
+                  className="p-4 sm:p-6 rounded-2xl border border-border bg-white shadow-card hover:shadow-elevated hover:border-slate-300 transition-all"
                 >
-                  <div className="flex flex-wrap items-center justify-between text-xs text-muted mb-4 gap-2 font-medium">
-                    <div className="flex items-center gap-2">
-                      <span className="bg-slate-100 text-primary px-3 py-0.5 rounded-md font-bold text-xs border border-slate-200">
+                  <div className="flex flex-wrap items-center justify-between text-xs text-muted mb-3 sm:mb-4 gap-2 font-medium">
+                    <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                      <span className="bg-slate-100 text-primary px-2.5 sm:px-3 py-0.5 rounded-md font-bold text-[11px] sm:text-xs border border-slate-200">
                         Court {m.court_number}
                       </span>
-                      <span className="text-primary font-bold">{m.category}</span>
+                      <span className="text-primary font-bold text-[11px] sm:text-xs">{m.category}</span>
                       <span className="text-slate-300">•</span>
-                      <span>{m.round}</span>
+                      <span className="text-[11px] sm:text-xs">{m.round}</span>
                     </div>
 
                     <div>
                       {isCompleted ? (
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="text-accent font-bold bg-accent-light px-3 py-0.5 rounded-full text-xs border border-accent-border">
+                          <span className="text-accent font-bold bg-accent-light px-2.5 sm:px-3 py-0.5 rounded-full text-[11px] sm:text-xs border border-accent-border">
                             Winner: {m.winner_name}
                           </span>
                           {m.completion_reason === "SUDDEN_DEATH" && (
@@ -224,28 +224,37 @@ export default function MatchesPage() {
                           )}
                         </div>
                       ) : (
-                        <span className="capitalize font-bold text-slate-600 bg-slate-50 px-2.5 py-0.5 rounded border border-border">
+                        <span className="capitalize font-bold text-slate-600 bg-slate-50 px-2.5 py-0.5 rounded border border-border text-[11px]">
                           {m.status}
                         </span>
                       )}
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-11 gap-4 items-center">
-                    <div className="md:col-span-4">
-                      <p
-                        className={`text-base sm:text-lg font-heading font-black ${
-                          m.winner_team === "A" ? "text-accent" : "text-primary"
-                        }`}
-                      >
-                        {m.team_a_name}
-                      </p>
-                      <p className="text-xs text-secondary mt-0.5">
-                        {m.team_a_player1?.full_name || ""}
-                      </p>
+                  <div className="grid grid-cols-1 md:grid-cols-11 gap-3 sm:gap-4 items-center">
+                    <div className="md:col-span-4 flex md:block items-center justify-between">
+                      <div className="min-w-0 pr-2">
+                        <p
+                          className={`text-base sm:text-lg font-heading font-black truncate ${
+                            m.winner_team === "A" ? "text-accent" : "text-primary"
+                          }`}
+                        >
+                          {m.team_a_name}
+                        </p>
+                        {m.team_a_player1?.full_name && (
+                          <p className="text-xs text-secondary mt-0.5 truncate">
+                            {m.team_a_player1?.full_name}
+                          </p>
+                        )}
+                      </div>
+                      {isCompleted && (
+                        <span className="md:hidden font-mono font-black text-xl text-primary shrink-0 px-2.5 py-0.5 rounded-lg bg-slate-100 border border-border">
+                          {m.score_a}
+                        </span>
+                      )}
                     </div>
 
-                    <div className="md:col-span-3 text-center">
+                    <div className="hidden md:block md:col-span-3 text-center">
                       {isCompleted ? (
                         <div className="inline-block px-5 py-1.5 rounded-xl bg-slate-100 font-mono font-black text-xl text-primary tabular-nums border border-border">
                           {m.score_a} : {m.score_b}
@@ -257,17 +266,26 @@ export default function MatchesPage() {
                       )}
                     </div>
 
-                    <div className="md:col-span-4 md:text-right">
-                      <p
-                        className={`text-base sm:text-lg font-heading font-black ${
-                          m.winner_team === "B" ? "text-accent" : "text-primary"
-                        }`}
-                      >
-                        {m.team_b_name}
-                      </p>
-                      <p className="text-xs text-secondary mt-0.5">
-                        {m.team_b_player1?.full_name || ""}
-                      </p>
+                    <div className="md:col-span-4 md:text-right flex md:block items-center justify-between">
+                      <div className="min-w-0 pr-2 md:pr-0">
+                        <p
+                          className={`text-base sm:text-lg font-heading font-black truncate ${
+                            m.winner_team === "B" ? "text-accent" : "text-primary"
+                          }`}
+                        >
+                          {m.team_b_name}
+                        </p>
+                        {m.team_b_player1?.full_name && (
+                          <p className="text-xs text-secondary mt-0.5 truncate">
+                            {m.team_b_player1?.full_name}
+                          </p>
+                        )}
+                      </div>
+                      {isCompleted && (
+                        <span className="md:hidden font-mono font-black text-xl text-primary shrink-0 px-2.5 py-0.5 rounded-lg bg-slate-100 border border-border">
+                          {m.score_b}
+                        </span>
+                      )}
                     </div>
                   </div>
 
@@ -302,48 +320,48 @@ export default function MatchesPage() {
 
         {/* Modal: Court Details */}
         {selectedMatch && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-            <div className="bg-white rounded-2xl max-w-3xl w-full border border-border shadow-elevated overflow-hidden max-h-[90vh] flex flex-col">
-              <div className="p-4 border-b border-border flex items-center justify-between bg-slate-50">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-900/60 backdrop-blur-xs">
+            <div className="bg-white rounded-2xl max-w-3xl w-full border border-border shadow-elevated overflow-hidden max-h-[92vh] flex flex-col">
+              <div className="p-3.5 sm:p-4 border-b border-border flex items-center justify-between bg-slate-50">
                 <div className="flex items-center gap-2">
                   <span className="w-2.5 h-2.5 rounded-full bg-accent animate-pulse" />
-                  <h3 className="font-heading font-black text-primary text-sm">
+                  <h3 className="font-heading font-black text-primary text-xs sm:text-sm">
                     Court {selectedMatch.court_number} • {selectedMatch.category} ({selectedMatch.round})
                   </h3>
                 </div>
                 <button
                   type="button"
                   onClick={() => setSelectedMatch(null)}
-                  className="p-1 rounded-lg text-secondary hover:text-primary hover:bg-slate-200 transition-colors"
+                  className="p-1.5 rounded-lg text-secondary hover:text-primary hover:bg-slate-200 transition-colors"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
-              <div className="p-6 overflow-y-auto space-y-6">
+              <div className="p-3.5 sm:p-6 overflow-y-auto space-y-4 sm:space-y-6">
                 <CourtVisualizer match={selectedMatch} />
 
                 {/* Score Summary Side-by-Side */}
-                <div className="grid grid-cols-2 gap-4 text-center">
-                  <div className="p-4 rounded-xl bg-slate-50 border border-border">
+                <div className="grid grid-cols-2 gap-3 sm:gap-4 text-center">
+                  <div className="p-3 sm:p-4 rounded-xl bg-slate-50 border border-border">
                     <p className="text-xs font-bold text-secondary mb-1 truncate">{selectedMatch.team_a_name}</p>
-                    <p className="text-4xl font-heading font-black text-primary">
+                    <p className="text-3xl sm:text-4xl font-heading font-black text-primary">
                       {selectedMatch.score_a}
                     </p>
                     {selectedMatch.serving_team === "A" && (
-                      <span className="inline-block mt-2 text-[10px] font-bold bg-accent-light text-accent border border-accent-border px-2 py-0.5 rounded-full">
+                      <span className="inline-block mt-2 text-[9px] sm:text-[10px] font-bold bg-accent-light text-accent border border-accent-border px-2 py-0.5 rounded-full">
                         Serving ({selectedMatch.service_court} box)
                       </span>
                     )}
                   </div>
 
-                  <div className="p-4 rounded-xl bg-slate-50 border border-border">
+                  <div className="p-3 sm:p-4 rounded-xl bg-slate-50 border border-border">
                     <p className="text-xs font-bold text-secondary mb-1 truncate">{selectedMatch.team_b_name}</p>
-                    <p className="text-4xl font-heading font-black text-primary">
+                    <p className="text-3xl sm:text-4xl font-heading font-black text-primary">
                       {selectedMatch.score_b}
                     </p>
                     {selectedMatch.serving_team === "B" && (
-                      <span className="inline-block mt-2 text-[10px] font-bold bg-accent-light text-accent border border-accent-border px-2 py-0.5 rounded-full">
+                      <span className="inline-block mt-2 text-[9px] sm:text-[10px] font-bold bg-accent-light text-accent border border-accent-border px-2 py-0.5 rounded-full">
                         Serving ({selectedMatch.service_court} box)
                       </span>
                     )}

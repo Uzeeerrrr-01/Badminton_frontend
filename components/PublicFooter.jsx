@@ -34,9 +34,9 @@ export default function PublicFooter() {
           </div>
         </div>
 
-        <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted font-medium">
+        <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted font-medium text-center sm:text-left">
           <p>© {new Date().getFullYear()} Apex Badminton Open. All tournament rights reserved.</p>
-          <div className="flex items-center gap-6">
+          <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
             <Link href="/matches" className="hover:text-primary transition-colors">
               Schedule & Fixtures
             </Link>

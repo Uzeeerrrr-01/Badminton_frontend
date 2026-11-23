@@ -118,7 +118,7 @@ export default function PlayersDirectoryPage() {
         </div>
 
         {/* Search & Filter Bar */}
-        <div className="p-4 rounded-2xl border border-border bg-white shadow-subtle mb-8 flex flex-col md:flex-row gap-4 items-center justify-between">
+        <div className="p-3.5 sm:p-4 rounded-2xl border border-border bg-white shadow-subtle mb-6 sm:mb-8 flex flex-col md:flex-row gap-3 sm:gap-4 items-stretch md:items-center justify-between">
           <div className="relative w-full md:w-96">
             <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
             <input
@@ -130,11 +130,11 @@ export default function PlayersDirectoryPage() {
             />
           </div>
 
-          <div className="flex items-center gap-3 w-full md:w-auto">
+          <div className="grid grid-cols-2 xs:flex items-center gap-2 sm:gap-3 w-full md:w-auto">
             <select
               value={genderFilter}
               onChange={(e) => setGenderFilter(e.target.value)}
-              className="text-xs px-3.5 py-2 border border-border rounded-xl bg-slate-50 text-primary font-semibold focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors"
+              className="text-xs px-3 sm:px-3.5 py-2 border border-border rounded-xl bg-slate-50 text-primary font-semibold focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors w-full xs:w-auto"
             >
               <option value="">All Genders</option>
               <option value="Male">Male Athletes</option>
@@ -144,7 +144,7 @@ export default function PlayersDirectoryPage() {
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              className="text-xs px-3.5 py-2 border border-border rounded-xl bg-slate-50 text-primary font-semibold focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors"
+              className="text-xs px-3 sm:px-3.5 py-2 border border-border rounded-xl bg-slate-50 text-primary font-semibold focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors w-full xs:w-auto"
             >
               <option value="">All Categories</option>
               {categories.map((c) => (
@@ -157,9 +157,9 @@ export default function PlayersDirectoryPage() {
         </div>
 
         {/* Players Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {filteredPlayers.length === 0 ? (
-            <div className="col-span-full p-16 text-center rounded-2xl border border-dashed border-border bg-white shadow-subtle">
+            <div className="col-span-full p-10 sm:p-16 text-center rounded-2xl border border-dashed border-border bg-white shadow-subtle">
               <div className="w-12 h-12 rounded-full bg-slate-100 mx-auto flex items-center justify-center mb-3">
                 <Users className="w-6 h-6 text-slate-400" />
               </div>
@@ -176,7 +176,7 @@ export default function PlayersDirectoryPage() {
               return (
                 <div
                   key={p.id}
-                  className="p-6 rounded-2xl border border-border bg-white shadow-card hover:shadow-elevated hover:border-slate-300 transition-all flex flex-col justify-between"
+                  className="p-4 sm:p-6 rounded-2xl border border-border bg-white shadow-card hover:shadow-elevated hover:border-slate-300 transition-all flex flex-col justify-between"
                 >
                   <div>
                     {/* Header: Monogram Avatar + Name + Gender badge */}
@@ -270,8 +270,8 @@ export default function PlayersDirectoryPage() {
 
         {/* Public Pagination Bar */}
         {filteredPlayers.length > 0 && totalPages > 1 && (
-          <div className="mt-10 p-4 rounded-2xl border border-border bg-white shadow-subtle flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-secondary">
-            <div>
+          <div className="mt-8 sm:mt-10 p-3.5 sm:p-4 rounded-2xl border border-border bg-white shadow-subtle flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 text-xs text-secondary">
+            <div className="text-center sm:text-left text-[11px] sm:text-xs">
               Showing <span className="font-bold text-primary">{startIndex + 1}</span> to{" "}
               <span className="font-bold text-primary">{endIndex}</span> of{" "}
               <span className="font-bold text-primary">{totalItems}</span> athletes
@@ -282,25 +282,25 @@ export default function PlayersDirectoryPage() {
                 type="button"
                 onClick={() => setCurrentPage(1)}
                 disabled={safeCurrentPage <= 1}
-                className="p-2 rounded-xl border border-border bg-white text-primary hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="p-1.5 sm:p-2 rounded-xl border border-border bg-white text-primary hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                 title="First Page"
               >
-                <ChevronsLeft className="w-4 h-4" />
+                <ChevronsLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </button>
               <button
                 type="button"
                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 disabled={safeCurrentPage <= 1}
-                className="p-2 rounded-xl border border-border bg-white text-primary hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="p-1.5 sm:p-2 rounded-xl border border-border bg-white text-primary hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                 title="Previous Page"
               >
-                <ChevronLeft className="w-4 h-4" />
+                <ChevronLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </button>
 
               <div className="flex items-center gap-1 px-1">
                 {getPageNumbers().map((page, idx) =>
                   page === "..." ? (
-                    <span key={`dots-${idx}`} className="px-2 text-muted text-xs select-none">
+                    <span key={`dots-${idx}`} className="px-1.5 text-muted text-xs select-none">
                       ...
                     </span>
                   ) : (
@@ -308,7 +308,7 @@ export default function PlayersDirectoryPage() {
                       key={page}
                       type="button"
                       onClick={() => setCurrentPage(page)}
-                      className={`min-w-8 h-8 px-2.5 rounded-xl text-xs font-bold transition-all ${
+                      className={`min-w-7 sm:min-w-8 h-7 sm:h-8 px-2 sm:px-2.5 rounded-xl text-xs font-bold transition-all ${
                         page === safeCurrentPage
                           ? "bg-primary text-white shadow-subtle"
                           : "bg-white border border-border text-slate-700 hover:bg-slate-50"
@@ -324,19 +324,19 @@ export default function PlayersDirectoryPage() {
                 type="button"
                 onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                 disabled={safeCurrentPage >= totalPages}
-                className="p-2 rounded-xl border border-border bg-white text-primary hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="p-1.5 sm:p-2 rounded-xl border border-border bg-white text-primary hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                 title="Next Page"
               >
-                <ChevronRight className="w-4 h-4" />
+                <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </button>
               <button
                 type="button"
                 onClick={() => setCurrentPage(totalPages)}
                 disabled={safeCurrentPage >= totalPages}
-                className="p-2 rounded-xl border border-border bg-white text-primary hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="p-1.5 sm:p-2 rounded-xl border border-border bg-white text-primary hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                 title="Last Page"
               >
-                <ChevronsRight className="w-4 h-4" />
+                <ChevronsRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </button>
             </div>
           </div>

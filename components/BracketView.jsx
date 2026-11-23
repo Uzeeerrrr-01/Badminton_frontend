@@ -11,8 +11,15 @@ export default function BracketView({ matches }) {
   }, {});
 
   return (
-    <div className="w-full overflow-x-auto py-4">
-      <div className="min-w-[760px] grid grid-cols-3 gap-6 items-center">
+    <div className="w-full py-2">
+      {/* Mobile Swipe Hint */}
+      <div className="sm:hidden flex items-center justify-end text-[11px] text-muted mb-2 gap-1 px-1 font-medium">
+        <ChevronRight className="w-3.5 h-3.5 text-accent animate-pulse" />
+        <span>Swipe horizontally to view full bracket tree</span>
+      </div>
+
+      <div className="w-full overflow-x-auto pb-4 pt-1 -mx-2 px-2 sm:mx-0 sm:px-0">
+        <div className="min-w-[720px] grid grid-cols-3 gap-4 sm:gap-6 items-center">
         {rounds.map((roundName, rIdx) => {
           const roundMatches = matchesByRound[roundName] || [];
 
@@ -100,6 +107,7 @@ export default function BracketView({ matches }) {
             </div>
           );
         })}
+        </div>
       </div>
     </div>
   );
