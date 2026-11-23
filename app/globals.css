@@ -5,6 +5,12 @@
 @tailwind utilities;
 
 @layer base {
+  html, body {
+    overflow-x: hidden;
+    max-width: 100%;
+    width: 100%;
+  }
+
   body {
     @apply bg-background text-primary antialiased selection:bg-emerald-100 selection:text-emerald-900;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
@@ -15,7 +21,7 @@
   }
 }
 
-/* Custom crisp light scrollbar */
+/* Custom crisp light scrollbar for desktop */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -29,4 +35,30 @@
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
+}
+
+/* Hide scrollbars completely on mobile to prevent side-scrolling bar glitches */
+@media (max-width: 768px) {
+  ::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+  * {
+    -ms-overflow-style: none !important;
+    scrollbar-width: none !important;
+  }
+}
+
+/* Utility to hide scrollbars */
+.no-scrollbar::-webkit-scrollbar,
+.scrollbar-none::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+.no-scrollbar,
+.scrollbar-none {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
 }

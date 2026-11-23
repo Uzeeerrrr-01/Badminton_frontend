@@ -439,6 +439,18 @@ export default function HomePage() {
                   ))
                 )}
               </div>
+
+              {/* Scheduled Matches Section Footer */}
+              <div className="mt-3.5 pt-2.5 border-t border-border/70 flex items-center justify-between text-xs">
+                <span className="text-muted text-[11px]">Official scheduled order of play</span>
+                <Link
+                  href="/matches"
+                  className="font-bold text-accent hover:text-accent-hover inline-flex items-center gap-1 transition-colors"
+                >
+                  <span>View All Schedule</span>
+                  <ArrowRight className="w-3 h-3" />
+                </Link>
+              </div>
             </div>
 
             {/* Completed Match Results */}
@@ -524,6 +536,18 @@ export default function HomePage() {
                   })
                 )}
               </div>
+
+              {/* Completed Results Section Footer */}
+              <div className="mt-3.5 pt-2.5 border-t border-border/70 flex items-center justify-between text-xs">
+                <span className="text-muted text-[11px]">Official umpire-certified scores</span>
+                <Link
+                  href="/matches"
+                  className="font-bold text-accent hover:text-accent-hover inline-flex items-center gap-1 transition-colors"
+                >
+                  <span>View All Results</span>
+                  <ArrowRight className="w-3 h-3" />
+                </Link>
+              </div>
             </div>
           </div>
         </section>
@@ -531,8 +555,8 @@ export default function HomePage() {
         {/* =========================================
             KNOCKOUT BRACKET PREVIEW
            ========================================= */}
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16">
-          <div className="border border-border rounded-2xl bg-white p-6 shadow-card">
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 sm:pt-16">
+          <div className="border border-border rounded-2xl bg-white p-4 sm:p-6 shadow-card overflow-hidden">
             <div className="flex items-center justify-between mb-4 pb-2 border-b border-border">
               <div>
                 <h3 className="text-lg font-heading font-black text-primary">Knockout Progression Tree</h3>
@@ -540,6 +564,21 @@ export default function HomePage() {
               </div>
             </div>
             <BracketView matches={matches} />
+
+            {/* Knockout Bracket Section Footer */}
+            <div className="mt-5 pt-3.5 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+              <div className="flex items-center gap-2 text-muted text-[11px] sm:text-xs">
+                <Trophy className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                <span>Knockout ladder: Quarter-finals through to the Championship Final</span>
+              </div>
+              <Link
+                href="/matches"
+                className="w-full sm:w-auto text-center px-3.5 py-1.5 rounded-xl text-xs font-bold text-primary bg-slate-100 hover:bg-slate-200 border border-border transition-colors inline-flex items-center justify-center gap-1"
+              >
+                <span>View Full Fixture Schedule</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
           </div>
         </section>
 
@@ -558,8 +597,38 @@ export default function HomePage() {
               </p>
             </div>
 
-            {/* Category Filter Pills (All 5 Categories) */}
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-2 scrollbar-none -mx-4 px-4 sm:mx-0 sm:px-0">
+            {/* Mobile Category Dropdown (Zero Side-Scrolling) */}
+            <div className="sm:hidden w-full">
+              <div className="relative">
+                <select
+                  aria-label="Filter tournament leaderboard by category"
+                  value={leaderboardCategory}
+                  onChange={(e) => setLeaderboardCategory(e.target.value)}
+                  className="w-full text-xs font-bold px-3.5 py-2.5 rounded-xl border border-border bg-white text-primary shadow-subtle focus:outline-none focus:ring-2 focus:ring-accent/20 cursor-pointer appearance-none"
+                >
+                  {[
+                    "All",
+                    "Men's Singles",
+                    "Women's Singles",
+                    "Men's Doubles",
+                    "Women's Doubles",
+                    "Mixed Doubles",
+                  ].map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat === "All" ? "All Categories" : cat}
+                    </option>
+                  ))}
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-secondary">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            {/* Desktop Category Filter Pills (Wrap naturally, Zero Side-Scrolling) */}
+            <div className="hidden sm:flex flex-wrap items-center gap-1.5">
               {[
                 "All",
                 "Men's Singles",
@@ -860,12 +929,13 @@ export default function HomePage() {
               </div>
             )}
 
-            <div className="p-3 bg-slate-50/50 border-t border-border text-center">
+            {/* Leaderboard Card Section Footer */}
+            <div className="p-3.5 bg-slate-50/80 border-t border-border flex items-center justify-center">
               <Link
                 href="/leaderboard"
-                className="text-xs font-bold text-accent hover:text-accent-hover transition-colors inline-flex items-center gap-1"
+                className="w-full sm:w-auto text-center px-4 py-2.5 rounded-xl text-xs font-bold text-accent bg-accent-light border border-accent-border hover:bg-emerald-100 transition-colors inline-flex items-center justify-center gap-1.5 shadow-xs"
               >
-                <span>View Complete Tournament Standings & Match Differentials</span>
+                <span>View Complete Standings & Differentials</span>
                 <ChevronRight className="w-3.5 h-3.5" />
               </Link>
             </div>

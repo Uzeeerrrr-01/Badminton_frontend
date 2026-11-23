@@ -102,7 +102,7 @@ export default function MatchesPage() {
         {/* Filter Controls Bar */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4 p-3 sm:p-3.5 rounded-2xl border border-border bg-white shadow-subtle mb-6 sm:mb-8">
           {/* Status Tabs */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-2 md:pb-0 scrollbar-none -mx-1 px-1">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 no-scrollbar scrollbar-none">
             <button
               onClick={() => setStatusFilter("all")}
               className={`px-3 sm:px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${

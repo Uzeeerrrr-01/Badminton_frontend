@@ -13,8 +13,8 @@ export const viewport = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
-      <body className="min-h-screen flex flex-col font-sans bg-background text-primary">
+    <html lang="en" className="overflow-x-hidden">
+      <body className="min-h-screen flex flex-col font-sans bg-background text-primary overflow-x-hidden w-full max-w-full">
         {children}
       </body>
     </html>

@@ -222,7 +222,7 @@ export default function LeaderboardPage() {
 
         {/* Filters & View Mode Switcher */}
         <div className="p-3 sm:p-4 rounded-2xl border border-border bg-white shadow-subtle mb-6 sm:mb-8 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 sm:gap-4">
-          <div className="flex items-center gap-1.5 overflow-x-auto w-full lg:w-auto pb-2 lg:pb-0 scrollbar-none -mx-1 px-1">
+          <div className="flex items-center gap-1.5 overflow-x-auto w-full lg:w-auto pb-1 lg:pb-0 no-scrollbar scrollbar-none">
             {CATEGORIES.map((c) => (
               <button
                 key={c}
