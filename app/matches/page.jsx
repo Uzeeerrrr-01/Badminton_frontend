@@ -84,62 +84,62 @@ export default function MatchesPage() {
     <div className="min-h-screen flex flex-col bg-background selection:bg-accent-light selection:text-accent">
       <PublicNavbar />
 
-      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full">
+      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 w-full overflow-x-hidden">
         {/* Header Banner */}
-        <div className="mb-8">
+        <div className="mb-6 sm:mb-8">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-accent-light text-accent border border-accent-border mb-3">
             <span className="w-2 h-2 rounded-full bg-accent animate-ping" />
             <span>CHAMPIONSHIP SCHEDULE & LIVE FEEDS</span>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-heading font-black text-primary tracking-tight">
+          <h1 className="text-2xl sm:text-4xl font-heading font-black text-primary tracking-tight">
             Tournament Matches & Fixtures
           </h1>
-          <p className="text-sm text-secondary mt-1 max-w-2xl">
+          <p className="text-xs sm:text-sm text-secondary mt-1 max-w-2xl">
             Live court scoring synced directly with the umpire console, upcoming match schedules, and official results.
           </p>
         </div>
 
         {/* Filter Controls Bar */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4 p-3 sm:p-3.5 rounded-2xl border border-border bg-white shadow-subtle mb-6 sm:mb-8">
-          {/* Status Tabs */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 no-scrollbar scrollbar-none">
+          {/* Status Tabs: 2x2 Grid on mobile, inline on desktop (Zero Side-Scrolling!) */}
+          <div className="grid grid-cols-2 md:flex md:items-center gap-1.5 w-full md:w-auto">
             <button
               onClick={() => setStatusFilter("all")}
-              className={`px-3 sm:px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
+              className={`px-3 sm:px-3.5 py-2 rounded-xl text-xs font-bold transition-all text-center ${
                 statusFilter === "all"
                   ? "bg-primary text-white shadow-subtle"
-                  : "text-secondary hover:text-primary hover:bg-slate-50"
+                  : "text-secondary hover:text-primary hover:bg-slate-50 border border-border/60 md:border-transparent"
               }`}
             >
               All Matches ({(matches || []).length})
             </button>
             <button
               onClick={() => setStatusFilter("live")}
-              className={`px-3 sm:px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 ${
+              className={`px-3 sm:px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 text-center ${
                 statusFilter === "live"
                   ? "bg-accent text-white shadow-emerald"
-                  : "text-secondary hover:text-accent hover:bg-accent-light/50"
+                  : "text-secondary hover:text-accent hover:bg-accent-light/50 border border-border/60 md:border-transparent"
               }`}
             >
               <span className={`w-2 h-2 rounded-full ${statusFilter === "live" ? "bg-white" : "bg-accent"} animate-pulse`} />
-              Live On Court ({liveCount})
+              Live ({liveCount})
             </button>
             <button
               onClick={() => setStatusFilter("upcoming")}
-              className={`px-3 sm:px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
+              className={`px-3 sm:px-3.5 py-2 rounded-xl text-xs font-bold transition-all text-center ${
                 statusFilter === "upcoming"
                   ? "bg-primary text-white shadow-subtle"
-                  : "text-secondary hover:text-primary hover:bg-slate-50"
+                  : "text-secondary hover:text-primary hover:bg-slate-50 border border-border/60 md:border-transparent"
               }`}
             >
               Upcoming ({upcomingCount})
             </button>
             <button
               onClick={() => setStatusFilter("completed")}
-              className={`px-3 sm:px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
+              className={`px-3 sm:px-3.5 py-2 rounded-xl text-xs font-bold transition-all text-center ${
                 statusFilter === "completed"
                   ? "bg-primary text-white shadow-subtle"
-                  : "text-secondary hover:text-primary hover:bg-slate-50"
+                  : "text-secondary hover:text-primary hover:bg-slate-50 border border-border/60 md:border-transparent"
               }`}
             >
               Completed ({completedCount})
@@ -152,7 +152,7 @@ export default function MatchesPage() {
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              className="text-xs px-3 py-1.5 border border-border rounded-xl bg-slate-50 text-primary font-semibold focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors w-full md:w-auto"
+              className="text-xs px-3 py-2 border border-border rounded-xl bg-slate-50 text-primary font-semibold focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors w-full md:w-auto cursor-pointer"
             >
               <option value="all">All Categories</option>
               {categories.map((c) => (

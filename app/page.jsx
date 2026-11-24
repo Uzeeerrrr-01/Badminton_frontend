@@ -163,10 +163,10 @@ export default function HomePage() {
   const paginatedLeaderboard = filteredLeaderboard.slice(startLbIdx, endLbIdx);
 
   return (
-    <div className="min-h-screen flex flex-col bg-background selection:bg-accent-light selection:text-accent">
+    <div className="min-h-screen flex flex-col bg-background selection:bg-accent-light selection:text-accent overflow-x-hidden w-full max-w-full">
       <PublicNavbar />
 
-      <main className="flex-1 pb-24">
+      <main className="flex-1 pb-24 overflow-x-hidden w-full max-w-full">
         {/* =========================================
             CLEAN ATHLETIC HERO SECTION (LIGHT THEME)
            ========================================= */}

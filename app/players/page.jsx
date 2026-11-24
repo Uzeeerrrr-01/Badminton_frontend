@@ -99,10 +99,10 @@ export default function PlayersDirectoryPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-background selection:bg-accent-light selection:text-accent">
+    <div className="min-h-screen flex flex-col bg-background selection:bg-accent-light selection:text-accent overflow-x-hidden w-full max-w-full">
       <PublicNavbar />
 
-      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full">
+      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 w-full overflow-x-hidden">
         {/* Header */}
         <div className="mb-8">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-accent-light text-accent border border-accent-border mb-3">

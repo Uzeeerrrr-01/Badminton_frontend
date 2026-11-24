@@ -25,11 +25,11 @@ export default function PublicNavbar() {
   ];
 
   return (
-    <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-border transition-colors">
+    <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-border transition-colors w-full max-w-full overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         {/* Brand */}
-        <Link href="/" className="flex items-center gap-3 group">
-          <div className="w-9 h-9 rounded-xl bg-accent text-white flex items-center justify-center shadow-emerald group-hover:bg-accent-hover transition-all">
+        <Link href="/" className="flex items-center gap-2.5 sm:gap-3 group min-w-0">
+          <div className="w-9 h-9 rounded-xl bg-accent text-white flex items-center justify-center shadow-emerald group-hover:bg-accent-hover transition-all shrink-0">
             <svg
               className="w-5 h-5 text-white"
               viewBox="0 0 24 24"
@@ -42,16 +42,16 @@ export default function PublicNavbar() {
               <path d="M12 2a4 4 0 0 0-4 4c0 1.5.8 2.8 2 3.5V14l-4 3v3l5-1 1 2 1-2 5 1v-3l-4-3V9.5c1.2-.7 2-2 2-3.5a4 4 0 0 0-4-4z" />
             </svg>
           </div>
-          <div>
-            <div className="flex items-center gap-1.5">
-              <span className="font-heading font-black text-primary tracking-tight text-base sm:text-lg block leading-none">
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <span className="font-heading font-black text-primary tracking-tight text-sm sm:text-lg block leading-none truncate max-w-[140px] xs:max-w-none">
                 APEX BADMINTON
               </span>
-              <span className="text-[10px] font-bold bg-accent-light text-accent border border-accent-border px-1.5 py-0.5 rounded-full">
+              <span className="text-[10px] font-bold bg-accent-light text-accent border border-accent-border px-1.5 py-0.5 rounded-full shrink-0">
                 OPEN
               </span>
             </div>
-            <span className="text-[10px] text-muted tracking-wider uppercase font-semibold block mt-0.5">
+            <span className="text-[10px] text-muted tracking-wider uppercase font-semibold block mt-0.5 truncate">
               Official Championship Portal
             </span>
           </div>
