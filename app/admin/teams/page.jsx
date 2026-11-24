@@ -61,14 +61,25 @@ export default function AdminTeamsPage() {
     fetchData();
   }, []);
 
+  const formatDefaultTeamName = (p1Id, p2Id) => {
+    const p1 = players.find((p) => p.id === p1Id);
+    const p2 = players.find((p) => p.id === p2Id);
+    if (p1 && p2) {
+      return `Team ${p1.full_name} and ${p2.full_name}`;
+    }
+    return "";
+  };
+
   const openCreateModal = () => {
     setEditingTeam(null);
     const men = players.filter((p) => p.gender === "Male");
+    const p1Id = men[0]?.id || "";
+    const p2Id = men[1]?.id || "";
     setFormData({
-      name: "",
+      name: formatDefaultTeamName(p1Id, p2Id),
       category: "Men's Doubles",
-      player1_id: men[0]?.id || "",
-      player2_id: men[1]?.id || "",
+      player1_id: p1Id,
+      player2_id: p2Id,
     });
     setFormError("");
     setModalOpen(true);
@@ -101,13 +112,32 @@ export default function AdminTeamsPage() {
   const handleCategoryChange = (cat) => {
     const p1List = getEligiblePlayersForTeam(cat, 1);
     const p2List = getEligiblePlayersForTeam(cat, 2);
+    const p1Id = p1List[0]?.id || "";
+    const p2Id = p2List.find((p) => p.id !== p1Id)?.id || p2List[0]?.id || "";
 
     setFormData({
       ...formData,
       category: cat,
-      player1_id: p1List[0]?.id || "",
-      player2_id: p2List.find((p) => p.id !== p1List[0]?.id)?.id || p2List[0]?.id || "",
+      player1_id: p1Id,
+      player2_id: p2Id,
+      name: formatDefaultTeamName(p1Id, p2Id),
     });
+  };
+
+  const handlePlayer1Select = (p1Id) => {
+    setFormData((prev) => ({
+      ...prev,
+      player1_id: p1Id,
+      name: formatDefaultTeamName(p1Id, prev.player2_id) || prev.name,
+    }));
+  };
+
+  const handlePlayer2Select = (p2Id) => {
+    setFormData((prev) => ({
+      ...prev,
+      player2_id: p2Id,
+      name: formatDefaultTeamName(prev.player1_id, p2Id) || prev.name,
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -119,6 +149,15 @@ export default function AdminTeamsPage() {
       return;
     }
 
+    let finalName = formData.name?.trim();
+    if (!finalName) {
+      finalName = formatDefaultTeamName(formData.player1_id, formData.player2_id);
+    }
+    if (!finalName) {
+      setFormError("Team name could not be generated. Please select both players.");
+      return;
+    }
+
     setSubmitting(true);
     try {
       const url = editingTeam ? `/api/teams/${editingTeam.id}` : "/api/teams";
@@ -127,7 +166,7 @@ export default function AdminTeamsPage() {
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({ ...formData, name: finalName }),
       });
 
       const data = await res.json();
@@ -409,17 +448,32 @@ export default function AdminTeamsPage() {
               )}
 
               <div>
-                <label className="block font-semibold text-primary uppercase tracking-wider mb-1">
-                  Team / Partnership Name *
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block font-semibold text-primary uppercase tracking-wider">
+                    Team / Partnership Name *
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const auto = formatDefaultTeamName(formData.player1_id, formData.player2_id);
+                      if (auto) setFormData((prev) => ({ ...prev, name: auto }));
+                    }}
+                    className="text-[10px] text-teal-600 hover:text-teal-800 font-bold hover:underline"
+                  >
+                    Auto-Fill Name
+                  </button>
+                </div>
                 <input
                   type="text"
                   required
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="e.g. Axelsen / Antonsen"
+                  placeholder="e.g. Team Affan and Roheen"
                   className="w-full px-3 py-2 border border-border rounded-xl bg-white text-primary focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 font-medium"
                 />
+                <p className="text-[10px] text-muted mt-1">
+                  💡 In Doubles &amp; Mixed Doubles, teams are named after players (e.g. &quot;Team Affan and Roheen&quot;).
+                </p>
               </div>
 
               <div>
@@ -442,7 +496,7 @@ export default function AdminTeamsPage() {
                   label={`Player 1 ${formData.category === "Mixed Doubles" ? "(Male Required)" : ""}`}
                   required
                   value={formData.player1_id}
-                  onChange={(pId) => setFormData({ ...formData, player1_id: pId })}
+                  onChange={handlePlayer1Select}
                   players={getEligiblePlayersForTeam(formData.category, 1)}
                   placeholder="Search and select Player 1..."
                 />
@@ -451,7 +505,7 @@ export default function AdminTeamsPage() {
                   label={`Player 2 ${formData.category === "Mixed Doubles" ? "(Female Required)" : ""}`}
                   required
                   value={formData.player2_id}
-                  onChange={(pId) => setFormData({ ...formData, player2_id: pId })}
+                  onChange={handlePlayer2Select}
                   players={getEligiblePlayersForTeam(formData.category, 2)}
                   excludeId={formData.player1_id}
                   placeholder="Search and select Player 2..."
