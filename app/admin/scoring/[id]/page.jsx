@@ -7,6 +7,7 @@ import CourtVisualizer from "@/components/CourtVisualizer";
 import FaultsGuideModal from "@/components/FaultsGuideModal";
 import TossModal from "@/components/TossModal";
 import MatchTimer from "@/components/MatchTimer";
+import ConfirmModal from "@/components/ConfirmModal";
 import { broadcastScoreUpdate } from "@/lib/liveScoreSync";
 import {
   RotateCcw,
@@ -55,6 +56,7 @@ export default function MatchScoringConsole({ params }) {
   const [showCourtVisualizer, setShowCourtVisualizer] = useState(true);
   const [showTossModal, setShowTossModal] = useState(false);
   const [actionInProgress, setActionInProgress] = useState(false);
+  const [confirmCompleteOpen, setConfirmCompleteOpen] = useState(false);
 
   // Fault modal state
   const [pendingTeam, setPendingTeam] = useState(null);
@@ -153,10 +155,7 @@ export default function MatchScoringConsole({ params }) {
     }
   };
 
-  const handleStatusChange = async (newStatus) => {
-    if (newStatus === "completed") {
-      if (!confirm("Are you sure you want to end and complete this match?")) return;
-    }
+  const executeStatusChange = async (newStatus) => {
     try {
       const res = await fetch(`/api/matches/${matchId}/status`, {
         method: "POST",
@@ -167,9 +166,18 @@ export default function MatchScoringConsole({ params }) {
       if (!res.ok) throw new Error(data.error || "Status update failed.");
       setMatch(data.match);
       broadcastScoreUpdate(data.match);
+      setConfirmCompleteOpen(false);
     } catch (err) {
       setError(err.message);
     }
+  };
+
+  const handleStatusChange = async (newStatus) => {
+    if (newStatus === "completed") {
+      setConfirmCompleteOpen(true);
+      return;
+    }
+    await executeStatusChange(newStatus);
   };
 
   const handleTossConfirm = async (tossData) => {
@@ -1011,6 +1019,19 @@ export default function MatchScoringConsole({ params }) {
           onClose={() => setShowFaultsGuide(false)}
         />
       )}
+
+      {/* Custom Confirmation Modal (Replaces browser confirm) */}
+      <ConfirmModal
+        isOpen={confirmCompleteOpen}
+        title="End & Complete Match?"
+        message="Are you sure you want to conclude and finalize this match? The current scores and winner will be officially stored, and tournament points will be updated."
+        confirmText="Yes, Conclude Match"
+        cancelText="Resume Scoring"
+        variant="primary"
+        submitting={actionInProgress}
+        onConfirm={() => executeStatusChange("completed")}
+        onClose={() => setConfirmCompleteOpen(false)}
+      />
     </div>
   );
 }

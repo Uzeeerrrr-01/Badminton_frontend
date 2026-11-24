@@ -24,6 +24,8 @@ import {
   ChevronsLeft,
   ChevronsRight,
 } from "lucide-react";
+import ConfirmModal from "@/components/ConfirmModal";
+import ToastNotification from "@/components/ToastNotification";
 import TossModal from "@/components/TossModal";
 import SearchablePlayerSelect from "@/components/SearchablePlayerSelect";
 import { isDoublesCategory, ROUNDS, CATEGORIES } from "@/lib/scoringEngine";
@@ -49,6 +51,16 @@ export default function AdminMatchesPage() {
 
   // Create match modal
   const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [confirmDialog, setConfirmDialog] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    confirmText: "Confirm",
+    variant: "danger",
+    action: null,
+  });
+  const [confirmSubmitting, setConfirmSubmitting] = useState(false);
+  const [toast, setToast] = useState({ message: "", type: "info" });
   const [formData, setFormData] = useState({
     category: "Men's Singles",
     round: "Quarter-finals",
@@ -235,7 +247,7 @@ export default function AdminMatchesPage() {
       fetchData();
       router.push(`/admin/scoring/${startedId}`);
     } catch (err) {
-      alert(err.message);
+      setToast({ message: err.message, type: "error" });
     }
   };
 
@@ -250,24 +262,59 @@ export default function AdminMatchesPage() {
         const d = await res.json();
         throw new Error(d.error || "Failed to update match status.");
       }
+      setToast({ message: `Match status updated to ${newStatus}.`, type: "success" });
       fetchData();
     } catch (err) {
-      alert(err.message);
+      setToast({ message: err.message, type: "error" });
     }
   };
 
-  const handleDeleteMatch = async (id) => {
-    if (!confirm("Are you sure you want to delete this match?")) return;
-    try {
-      const res = await fetch(`/api/matches/${id}`, { method: "DELETE" });
-      if (!res.ok) {
-        const d = await res.json().catch(() => ({}));
-        throw new Error(d.error || "Failed to delete match.");
-      }
-      fetchData();
-    } catch (err) {
-      alert(err.message);
-    }
+  const requestDeleteMatch = (match) => {
+    setConfirmDialog({
+      isOpen: true,
+      title: "Delete Match?",
+      message: `Are you sure you want to delete Match #${match.match_number || ""} (${match.team_a_name} vs ${match.team_b_name})? Scheduled scores and results will be permanently removed.`,
+      confirmText: "Delete Match",
+      variant: "danger",
+      action: async () => {
+        setConfirmSubmitting(true);
+        try {
+          const res = await fetch(`/api/matches/${match.id}`, { method: "DELETE" });
+          if (!res.ok) {
+            const d = await res.json().catch(() => ({}));
+            throw new Error(d.error || "Failed to delete match.");
+          }
+          setToast({ message: "Match deleted successfully.", type: "success" });
+          setConfirmDialog({ isOpen: false, title: "", message: "", action: null });
+          fetchData();
+        } catch (err) {
+          setToast({ message: err.message, type: "error" });
+        } finally {
+          setConfirmSubmitting(false);
+        }
+      },
+    });
+  };
+
+  const requestEndMatch = (matchId) => {
+    setConfirmDialog({
+      isOpen: true,
+      title: "End Match?",
+      message: "Are you sure you want to end and complete this match now? Final scores will be locked and points will be officially awarded.",
+      confirmText: "End Match",
+      variant: "primary",
+      action: async () => {
+        setConfirmSubmitting(true);
+        try {
+          await updateStatus(matchId, "completed");
+          setConfirmDialog({ isOpen: false, title: "", message: "", action: null });
+        } catch (err) {
+          setToast({ message: err.message, type: "error" });
+        } finally {
+          setConfirmSubmitting(false);
+        }
+      },
+    });
   };
 
   const filteredMatches = matches.filter((m) => {
@@ -473,11 +520,7 @@ export default function AdminMatchesPage() {
                       </button>
                       <button
                         type="button"
-                        onClick={() => {
-                          if (confirm("End and complete this match now?")) {
-                            updateStatus(m.id, "completed");
-                          }
-                        }}
+                        onClick={() => requestEndMatch(m.id)}
                         className="p-2 rounded-xl border border-border text-muted hover:text-teal-700 hover:bg-teal-50 transition-colors"
                         title="End Match"
                       >
@@ -515,7 +558,7 @@ export default function AdminMatchesPage() {
 
                   <button
                     type="button"
-                    onClick={() => handleDeleteMatch(m.id)}
+                    onClick={() => requestDeleteMatch(m)}
                     className="p-2 text-muted hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors"
                     title="Delete Match"
                   >
@@ -885,6 +928,27 @@ export default function AdminMatchesPage() {
           </div>
         </div>
       )}
+
+      {/* Custom Confirmation Modal (Replaces browser confirm) */}
+      <ConfirmModal
+        isOpen={confirmDialog.isOpen}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        confirmText={confirmDialog.confirmText}
+        variant={confirmDialog.variant}
+        submitting={confirmSubmitting}
+        onConfirm={() => {
+          if (confirmDialog.action) confirmDialog.action();
+        }}
+        onClose={() => setConfirmDialog({ isOpen: false, title: "", message: "", action: null })}
+      />
+
+      {/* Custom Toast Notification (Replaces browser alert) */}
+      <ToastNotification
+        message={toast.message}
+        type={toast.type}
+        onClose={() => setToast({ message: "", type: "info" })}
+      />
     </>
   );
 }

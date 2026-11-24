@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import ConfirmModal from "@/components/ConfirmModal";
+import ToastNotification from "@/components/ToastNotification";
 import {
   Users,
   Plus,
@@ -43,6 +45,9 @@ export default function AdminPlayersPage() {
   });
   const [formError, setFormError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState({ isOpen: false, id: null, name: "" });
+  const [deleteSubmitting, setDeleteSubmitting] = useState(false);
+  const [toast, setToast] = useState({ message: "", type: "info" });
 
   const allCategories = [
     "Men's Singles",
@@ -200,6 +205,12 @@ export default function AdminPlayersPage() {
       }
 
       setModalOpen(false);
+      setToast({
+        message: editingPlayer
+          ? `Competitor "${formData.full_name}" updated successfully.`
+          : `Competitor "${formData.full_name}" registered successfully.`,
+        type: "success",
+      });
       fetchPlayers();
     } catch (err) {
       setFormError(err.message);
@@ -208,20 +219,26 @@ export default function AdminPlayersPage() {
     }
   };
 
-  const handleDelete = async (id, name) => {
-    if (!confirm(`Are you sure you want to remove competitor ${name} from the tournament?`)) {
-      return;
-    }
+  const requestDelete = (id, name) => {
+    setDeleteConfirm({ isOpen: true, id, name });
+  };
 
+  const handleExecuteDelete = async () => {
+    if (!deleteConfirm.id) return;
+    setDeleteSubmitting(true);
     try {
-      const res = await fetch(`/api/players/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/players/${deleteConfirm.id}`, { method: "DELETE" });
       if (!res.ok) {
-        const data = await res.json();
+        const data = await res.json().catch(() => ({}));
         throw new Error(data.error || "Failed to delete player.");
       }
+      setToast({ message: `Competitor "${deleteConfirm.name}" removed successfully.`, type: "success" });
+      setDeleteConfirm({ isOpen: false, id: null, name: "" });
       fetchPlayers();
     } catch (err) {
-      alert(err.message);
+      setToast({ message: err.message, type: "error" });
+    } finally {
+      setDeleteSubmitting(false);
     }
   };
 
@@ -427,7 +444,7 @@ export default function AdminPlayersPage() {
                         </button>
                         <button
                           type="button"
-                          onClick={() => handleDelete(p.id, p.full_name)}
+                          onClick={() => requestDelete(p.id, p.full_name)}
                           className="p-1.5 text-muted hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
                           title="Remove Competitor"
                         >
@@ -697,6 +714,26 @@ export default function AdminPlayersPage() {
           </div>
         </div>
       )}
+
+      {/* Custom Confirmation Modal (Replaces browser confirm) */}
+      <ConfirmModal
+        isOpen={deleteConfirm.isOpen}
+        title="Remove Competitor?"
+        message={`Are you sure you want to remove competitor "${deleteConfirm.name}" from the tournament? This action will remove their eligibility and records.`}
+        confirmText="Remove Competitor"
+        cancelText="Cancel"
+        variant="danger"
+        submitting={deleteSubmitting}
+        onConfirm={handleExecuteDelete}
+        onClose={() => setDeleteConfirm({ isOpen: false, id: null, name: "" })}
+      />
+
+      {/* Custom Toast Notification (Replaces browser alert) */}
+      <ToastNotification
+        message={toast.message}
+        type={toast.type}
+        onClose={() => setToast({ message: "", type: "info" })}
+      />
     </>
   );
 }

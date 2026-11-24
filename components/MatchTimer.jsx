@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { Timer, Pause, Play, RotateCcw, Volume2, VolumeX, Flame } from "lucide-react";
+import ConfirmModal from "@/components/ConfirmModal";
 
 export default function MatchTimer({ matchId, match, onMatchUpdate }) {
   const timerEnabled = match?.timer_enabled;
@@ -18,6 +19,7 @@ export default function MatchTimer({ matchId, match, onMatchUpdate }) {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [expired, setExpired] = useState(false);
   const [actionInProgress, setActionInProgress] = useState(false);
+  const [confirmResetOpen, setConfirmResetOpen] = useState(false);
 
   const rafRef = useRef(null);
   const audioRef = useRef(null);
@@ -152,9 +154,8 @@ export default function MatchTimer({ matchId, match, onMatchUpdate }) {
     onMatchUpdate,
   ]);
 
-  const sendAction = async (action) => {
+  const executeAction = async (action) => {
     if (actionInProgress) return;
-    if (action === "reset" && !confirm("Reset timer to original duration?")) return;
     setActionInProgress(true);
     try {
       const res = await fetch(`/api/matches/${matchId}/timer`, {
@@ -168,11 +169,20 @@ export default function MatchTimer({ matchId, match, onMatchUpdate }) {
         setExpired(false);
         expiredRef.current = false;
       }
+      setConfirmResetOpen(false);
     } catch (e) {
       console.error(e);
     } finally {
       setActionInProgress(false);
     }
+  };
+
+  const sendAction = async (action) => {
+    if (action === "reset") {
+      setConfirmResetOpen(true);
+      return;
+    }
+    await executeAction(action);
   };
 
   const testSound = () => {
@@ -353,6 +363,19 @@ export default function MatchTimer({ matchId, match, onMatchUpdate }) {
           <RotateCcw className="w-3.5 h-3.5" /> Reset Duration
         </button>
       </div>
+
+      {/* Custom Confirmation Modal (Replaces browser confirm) */}
+      <ConfirmModal
+        isOpen={confirmResetOpen}
+        title="Reset Match Timer?"
+        message="Are you sure you want to reset the countdown clock to its original duration? Any elapsed time will be cleared."
+        confirmText="Reset Clock"
+        cancelText="Cancel"
+        variant="warning"
+        submitting={actionInProgress}
+        onConfirm={() => executeAction("reset")}
+        onClose={() => setConfirmResetOpen(false)}
+      />
     </div>
   );
 }

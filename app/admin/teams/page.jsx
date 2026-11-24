@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import ConfirmModal from "@/components/ConfirmModal";
+import ToastNotification from "@/components/ToastNotification";
 import {
   UserCheck,
   Plus,
@@ -39,6 +41,9 @@ export default function AdminTeamsPage() {
   });
   const [formError, setFormError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState({ isOpen: false, id: null, name: "" });
+  const [deleteSubmitting, setDeleteSubmitting] = useState(false);
+  const [toast, setToast] = useState({ message: "", type: "info" });
 
   const fetchData = async () => {
     try {
@@ -175,6 +180,12 @@ export default function AdminTeamsPage() {
       }
 
       setModalOpen(false);
+      setToast({
+        message: editingTeam
+          ? `Team "${finalName}" updated successfully.`
+          : `Team "${finalName}" created successfully.`,
+        type: "success",
+      });
       fetchData();
     } catch (err) {
       setFormError(err.message);
@@ -183,15 +194,23 @@ export default function AdminTeamsPage() {
     }
   };
 
-  const handleDelete = async (id, name) => {
-    if (!confirm(`Are you sure you want to remove team "${name}"?`)) return;
+  const requestDelete = (id, name) => {
+    setDeleteConfirm({ isOpen: true, id, name });
+  };
 
+  const handleExecuteDelete = async () => {
+    if (!deleteConfirm.id) return;
+    setDeleteSubmitting(true);
     try {
-      const res = await fetch(`/api/teams/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/teams/${deleteConfirm.id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to delete team.");
+      setToast({ message: `Team "${deleteConfirm.name}" removed successfully.`, type: "success" });
+      setDeleteConfirm({ isOpen: false, id: null, name: "" });
       fetchData();
     } catch (err) {
-      alert(err.message);
+      setToast({ message: err.message, type: "error" });
+    } finally {
+      setDeleteSubmitting(false);
     }
   };
 
@@ -336,7 +355,7 @@ export default function AdminTeamsPage() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => handleDelete(t.id, t.name)}
+                  onClick={() => requestDelete(t.id, t.name)}
                   className="p-1.5 text-muted hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
                   title="Delete Team"
                 >
@@ -532,6 +551,26 @@ export default function AdminTeamsPage() {
           </div>
         </div>
       )}
+
+      {/* Custom Confirmation Modal (Replaces browser confirm) */}
+      <ConfirmModal
+        isOpen={deleteConfirm.isOpen}
+        title="Remove Team?"
+        message={`Are you sure you want to remove team "${deleteConfirm.name}"? This will dissolve the partnership.`}
+        confirmText="Remove Team"
+        cancelText="Cancel"
+        variant="danger"
+        submitting={deleteSubmitting}
+        onConfirm={handleExecuteDelete}
+        onClose={() => setDeleteConfirm({ isOpen: false, id: null, name: "" })}
+      />
+
+      {/* Custom Toast Notification (Replaces browser alert) */}
+      <ToastNotification
+        message={toast.message}
+        type={toast.type}
+        onClose={() => setToast({ message: "", type: "info" })}
+      />
     </div>
   );
 }
