@@ -17,6 +17,7 @@ import {
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
+  Sparkles,
 } from "lucide-react";
 
 export default function AdminPlayersPage() {
@@ -116,10 +117,44 @@ export default function AdminPlayersPage() {
     });
   };
 
+  const getNextPlayerId = (playersList = []) => {
+    if (!playersList || playersList.length === 0) {
+      return "PLY-001";
+    }
+
+    let maxNum = 0;
+    const existingIds = new Set();
+    playersList.forEach((p) => {
+      const pid = (p.player_id || "").trim();
+      if (pid) {
+        existingIds.add(pid.toUpperCase());
+        const match = pid.match(/(\d+)/);
+        if (match) {
+          const num = parseInt(match[1], 10);
+          if (!isNaN(num) && num > maxNum) {
+            maxNum = num;
+          }
+        }
+      }
+    });
+
+    let nextNum = Math.max(playersList.length + 1, maxNum + 1);
+    let candidate = `PLY-${String(nextNum).padStart(3, "0")}`;
+
+    while (existingIds.has(candidate.toUpperCase())) {
+      nextNum++;
+      candidate = `PLY-${String(nextNum).padStart(3, "0")}`;
+    }
+
+    return candidate;
+  };
+  };
+
   const openCreateModal = () => {
     setEditingPlayer(null);
+    const autoId = getNextPlayerId(players);
     setFormData({
-      player_id: "",
+      player_id: autoId,
       full_name: "",
       gender: "Male",
       contact_email: "",
@@ -609,17 +644,36 @@ export default function AdminPlayersPage() {
               })()}
 
               <div>
-                <label className="block font-semibold text-primary uppercase tracking-wider mb-1">
-                  Player Identification (ID) *
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block font-semibold text-primary uppercase tracking-wider">
+                    Player Identification (ID) *
+                  </label>
+                  {!editingPlayer && (
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, player_id: getNextPlayerId(players) })}
+                      className="text-[11px] font-bold text-teal-600 hover:text-teal-700 hover:underline flex items-center gap-1 cursor-pointer"
+                      title="Recalculate next sequential ID"
+                    >
+                      <Sparkles className="w-3 h-3" />
+                      <span>Auto-fill #{players.length + 1}</span>
+                    </button>
+                  )}
+                </div>
                 <input
                   type="text"
                   required
                   value={formData.player_id}
-                  onChange={(e) => setFormData({ ...formData, player_id: e.target.value })}
-                  placeholder="e.g. PLY-001"
-                  className="w-full px-3 py-2 border border-border rounded-xl bg-white text-primary focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 uppercase font-mono"
+                  onChange={(e) => setFormData({ ...formData, player_id: e.target.value.toUpperCase() })}
+                  placeholder={`e.g. ${getNextPlayerId(players)}`}
+                  className="w-full px-3 py-2 border border-border rounded-xl bg-white text-primary focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 uppercase font-mono font-bold"
                 />
+                {!editingPlayer && (
+                  <p className="text-[11px] text-muted mt-1 flex items-center justify-between">
+                    <span>Autofilled based on {players.length} registered player{players.length === 1 ? "" : "s"}.</span>
+                    <span className="font-mono text-slate-500">Next: {getNextPlayerId(players)}</span>
+                  </p>
+                )}
               </div>
 
               <div>
