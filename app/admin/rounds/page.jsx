@@ -173,7 +173,8 @@ export default function AdminRoundsPage() {
     setResetSubmitting(true);
     setError("");
     try {
-      const res = await fetch(`/api/rounds/${roundToReset.id}/reset`, {
+      const resetId = roundToReset._id || roundToReset.id;
+      const res = await fetch(`/api/rounds/${resetId}/reset`, {
         method: "POST",
         credentials: "include",
       });
