@@ -5,6 +5,7 @@ import PublicNavbar from "@/components/PublicNavbar";
 import PublicFooter from "@/components/PublicFooter";
 import LiveScoreboardCard from "@/components/LiveScoreboardCard";
 import CourtVisualizer from "@/components/CourtVisualizer";
+import BracketView from "@/components/BracketView";
 import { useLiveMatches } from "@/lib/useLiveMatches";
 import {
   Activity,
@@ -44,6 +45,7 @@ function formatMatchDateTime(match) {
 
 export default function MatchesPage() {
   const { matches, loading } = useLiveMatches();
+  const [viewMode, setViewMode] = useState("list"); // "list" | "bracket"
   const [statusFilter, setStatusFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [selectedMatch, setSelectedMatch] = useState(null);
@@ -99,73 +101,105 @@ export default function MatchesPage() {
           </p>
         </div>
 
-        {/* Filter Controls Bar */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4 p-3 sm:p-3.5 rounded-2xl border border-border bg-white shadow-subtle mb-6 sm:mb-8">
-          {/* Status Tabs */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 no-scrollbar scrollbar-none">
+        {/* View Mode Switcher (Schedule vs Knockout Bracket) */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-xl border border-border">
             <button
-              onClick={() => setStatusFilter("all")}
-              className={`px-3 sm:px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
-                statusFilter === "all"
-                  ? "bg-primary text-white shadow-subtle"
-                  : "text-secondary hover:text-primary hover:bg-slate-50"
+              onClick={() => setViewMode("list")}
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                viewMode === "list"
+                  ? "bg-white text-primary shadow-xs font-black"
+                  : "text-secondary hover:text-primary"
               }`}
             >
-              All Matches ({(matches || []).length})
+              Fixtures & Schedules
             </button>
             <button
-              onClick={() => setStatusFilter("live")}
-              className={`px-3 sm:px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 ${
-                statusFilter === "live"
-                  ? "bg-accent text-white shadow-emerald"
-                  : "text-secondary hover:text-accent hover:bg-accent-light/50"
+              onClick={() => setViewMode("bracket")}
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                viewMode === "bracket"
+                  ? "bg-white text-primary shadow-xs font-black"
+                  : "text-secondary hover:text-primary"
               }`}
             >
-              <span className={`w-2 h-2 rounded-full ${statusFilter === "live" ? "bg-white" : "bg-accent"} animate-pulse`} />
-              Live On Court ({liveCount})
+              Knockout Bracket
             </button>
-            <button
-              onClick={() => setStatusFilter("upcoming")}
-              className={`px-3 sm:px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
-                statusFilter === "upcoming"
-                  ? "bg-primary text-white shadow-subtle"
-                  : "text-secondary hover:text-primary hover:bg-slate-50"
-              }`}
-            >
-              Upcoming ({upcomingCount})
-            </button>
-            <button
-              onClick={() => setStatusFilter("completed")}
-              className={`px-3 sm:px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
-                statusFilter === "completed"
-                  ? "bg-primary text-white shadow-subtle"
-                  : "text-secondary hover:text-primary hover:bg-slate-50"
-              }`}
-            >
-              Completed ({completedCount})
-            </button>
-          </div>
-
-          {/* Category Filter */}
-          <div className="flex items-center gap-2 w-full md:w-auto">
-            <Filter className="w-3.5 h-3.5 text-secondary shrink-0" />
-            <select
-              value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
-              className="text-xs px-3 py-1.5 border border-border rounded-xl bg-slate-50 text-primary font-semibold focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors w-full md:w-auto"
-            >
-              <option value="all">All Categories</option>
-              {categories.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
           </div>
         </div>
 
-        {/* Matches Grid */}
-        <div className="space-y-4 sm:space-y-6">
+        {viewMode === "bracket" ? (
+          <div className="p-6 rounded-2xl border border-border bg-white shadow-subtle mb-8">
+            <BracketView matches={matches} initialCategory={categoryFilter !== "all" ? categoryFilter : "Men's Singles"} />
+          </div>
+        ) : (
+          <>
+            {/* Filter Controls Bar */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4 p-3 sm:p-3.5 rounded-2xl border border-border bg-white shadow-subtle mb-6 sm:mb-8">
+              {/* Status Tabs */}
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 no-scrollbar scrollbar-none">
+                <button
+                  onClick={() => setStatusFilter("all")}
+                  className={`px-3 sm:px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
+                    statusFilter === "all"
+                      ? "bg-primary text-white shadow-subtle"
+                      : "text-secondary hover:text-primary hover:bg-slate-50"
+                  }`}
+                >
+                  All Matches ({(matches || []).length})
+                </button>
+                <button
+                  onClick={() => setStatusFilter("live")}
+                  className={`px-3 sm:px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 ${
+                    statusFilter === "live"
+                      ? "bg-accent text-white shadow-emerald"
+                      : "text-secondary hover:text-accent hover:bg-accent-light/50"
+                  }`}
+                >
+                  <span className={`w-2 h-2 rounded-full ${statusFilter === "live" ? "bg-white" : "bg-accent"} animate-pulse`} />
+                  Live On Court ({liveCount})
+                </button>
+                <button
+                  onClick={() => setStatusFilter("upcoming")}
+                  className={`px-3 sm:px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
+                    statusFilter === "upcoming"
+                      ? "bg-primary text-white shadow-subtle"
+                      : "text-secondary hover:text-primary hover:bg-slate-50"
+                  }`}
+                >
+                  Upcoming ({upcomingCount})
+                </button>
+                <button
+                  onClick={() => setStatusFilter("completed")}
+                  className={`px-3 sm:px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
+                    statusFilter === "completed"
+                      ? "bg-primary text-white shadow-subtle"
+                      : "text-secondary hover:text-primary hover:bg-slate-50"
+                  }`}
+                >
+                  Completed ({completedCount})
+                </button>
+              </div>
+
+              {/* Category Filter */}
+              <div className="flex items-center gap-2 w-full md:w-auto">
+                <Filter className="w-3.5 h-3.5 text-secondary shrink-0" />
+                <select
+                  value={categoryFilter}
+                  onChange={(e) => setCategoryFilter(e.target.value)}
+                  className="text-xs px-3 py-1.5 border border-border rounded-xl bg-slate-50 text-primary font-semibold focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors w-full md:w-auto"
+                >
+                  <option value="all">All Categories</option>
+                  {categories.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Matches Grid */}
+            <div className="space-y-4 sm:space-y-6">
           {filteredMatches.length === 0 ? (
             <div className="p-10 sm:p-16 text-center rounded-2xl border border-dashed border-border bg-white shadow-subtle">
               <div className="w-12 h-12 rounded-full bg-slate-100 mx-auto flex items-center justify-center mb-3">
@@ -317,6 +351,8 @@ export default function MatchesPage() {
             })
           )}
         </div>
+        </>
+        )}
 
         {/* Modal: Court Details */}
         {selectedMatch && (

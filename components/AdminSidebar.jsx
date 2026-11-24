@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
+  Layers,
   Users,
   UserCheck,
   Calendar,
@@ -31,6 +32,7 @@ export default function AdminSidebar({ user }) {
 
   const navItems = [
     { href: "/admin", label: "Overview", icon: LayoutDashboard },
+    { href: "/admin/rounds", label: "Round Management", icon: Layers, highlight: true },
     { href: "/admin/players", label: "Players", icon: Users },
     { href: "/admin/teams", label: "Teams", icon: UserCheck },
     { href: "/admin/matches", label: "Matches", icon: Calendar },
