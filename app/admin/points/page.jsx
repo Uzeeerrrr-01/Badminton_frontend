@@ -263,8 +263,8 @@ export default function AdminPointsPage() {
 
       {/* Filter Tabs & View Mode Switcher */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl border border-border bg-white shadow-subtle">
-        {/* Category Pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+        {/* Category Pills (Wrapping, Zero Side-Scrolling) */}
+        <div className="flex flex-wrap items-center gap-1.5 pb-1 sm:pb-0">
           {categories.map((cat) => (
             <button
               key={cat}

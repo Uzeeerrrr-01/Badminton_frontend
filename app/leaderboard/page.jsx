@@ -113,10 +113,10 @@ export default function LeaderboardPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-background selection:bg-accent-light selection:text-accent">
+    <div className="min-h-screen flex flex-col bg-background selection:bg-accent-light selection:text-accent overflow-x-hidden w-full max-w-full">
       <PublicNavbar />
 
-      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full">
+      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 w-full overflow-x-hidden">
         {/* Header */}
         <div className="mb-8">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-border mb-3">
@@ -222,7 +222,31 @@ export default function LeaderboardPage() {
 
         {/* Filters & View Mode Switcher */}
         <div className="p-3 sm:p-4 rounded-2xl border border-border bg-white shadow-subtle mb-6 sm:mb-8 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 sm:gap-4">
-          <div className="flex items-center gap-1.5 overflow-x-auto w-full lg:w-auto pb-1 lg:pb-0 no-scrollbar scrollbar-none">
+          {/* Mobile Category Dropdown (Zero Side-Scrolling) */}
+          <div className="lg:hidden w-full">
+            <div className="relative">
+              <select
+                aria-label="Filter leaderboard category"
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="w-full text-xs font-bold px-3.5 py-2.5 rounded-xl border border-border bg-slate-50 text-primary shadow-subtle focus:outline-none focus:ring-2 focus:ring-accent/20 cursor-pointer appearance-none"
+              >
+                {CATEGORIES.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat === "All" ? "All Categories" : cat}
+                  </option>
+                ))}
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-secondary">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          {/* Desktop Category Filter Tabs (Zero Side-Scrolling) */}
+          <div className="hidden lg:flex flex-wrap items-center gap-1.5">
             {CATEGORIES.map((c) => (
               <button
                 key={c}
@@ -230,7 +254,7 @@ export default function LeaderboardPage() {
                 className={`px-3 sm:px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
                   selectedCategory === c
                     ? "bg-accent text-white shadow-emerald"
-                    : "text-secondary hover:text-primary hover:bg-slate-50"
+                    : "text-secondary hover:text-primary hover:bg-slate-50 border border-transparent"
                 }`}
               >
                 {c}
@@ -737,18 +761,18 @@ export default function LeaderboardPage() {
                 history.map((h) => (
                   <div
                     key={h.id}
-                    className="p-3.5 flex items-center justify-between text-xs hover:bg-slate-50 transition-colors"
+                    className="p-3.5 flex items-center justify-between text-xs hover:bg-slate-50 transition-colors gap-3"
                   >
-                    <div>
-                      <span className="font-bold text-primary">{h.entity_name}</span>
-                      <span className="text-secondary ml-2 text-[11px]">{h.reason}</span>
+                    <div className="min-w-0 flex-1">
+                      <span className="font-bold text-primary truncate block sm:inline">{h.entity_name}</span>
+                      <span className="text-secondary sm:ml-2 text-[11px] block sm:inline">{h.reason}</span>
                       {h.category && (
-                        <span className="ml-2 text-[10px] text-muted bg-slate-100 px-1.5 py-0.5 rounded">
+                        <span className="sm:ml-2 text-[10px] text-muted bg-slate-100 px-1.5 py-0.5 rounded inline-block mt-0.5 sm:mt-0">
                           {h.category}
                         </span>
                       )}
                     </div>
-                    <span className="font-mono font-bold text-accent">
+                    <span className="font-mono font-bold text-accent shrink-0 text-right">
                       {h.points_delta > 0 ? `+${h.points_delta}` : h.points_delta} pts
                     </span>
                   </div>

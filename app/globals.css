@@ -5,10 +5,15 @@
 @tailwind utilities;
 
 @layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
   html, body {
-    overflow-x: hidden;
-    max-width: 100%;
-    width: 100%;
+    overflow-x: hidden !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    position: relative;
   }
 
   body {

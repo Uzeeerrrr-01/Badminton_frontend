@@ -50,9 +50,9 @@ export default function AdminLayout({ children }) {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background overflow-x-hidden w-full max-w-full">
       {/* Mobile Top Header (Sticky) */}
-      <div className="md:hidden sticky top-0 z-40 flex items-center justify-between px-4 h-14 bg-primary text-white border-b border-secondary shrink-0">
+      <div className="md:hidden sticky top-0 z-40 flex items-center justify-between px-4 h-14 bg-primary text-white border-b border-secondary shrink-0 w-full max-w-full">
         <Link href="/admin" className="flex items-center gap-2">
           <span className="w-6 h-6 rounded-md bg-teal-500/20 border border-teal-400/30 flex items-center justify-center text-teal-400 font-bold text-xs">
             A
@@ -90,8 +90,8 @@ export default function AdminLayout({ children }) {
       )}
 
       {/* Main Content Area (offset with md:pl-64 to clear the fixed sidebar) */}
-      <div className="md:pl-64 flex flex-col min-w-0 min-h-screen">
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
+      <div className="md:pl-64 flex flex-col min-w-0 min-h-screen overflow-x-hidden w-full max-w-full">
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto overflow-x-hidden">
           {children}
         </main>
       </div>
