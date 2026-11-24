@@ -148,7 +148,6 @@ export default function AdminPlayersPage() {
 
     return candidate;
   };
-  };
 
   const openCreateModal = () => {
     setEditingPlayer(null);
