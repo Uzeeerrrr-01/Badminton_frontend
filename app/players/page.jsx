@@ -21,6 +21,7 @@ import {
 export default function PlayersDirectoryPage() {
   const [players, setPlayers] = useState([]);
   const [leaderboard, setLeaderboard] = useState([]);
+  const [teams, setTeams] = useState([]);
   const [search, setSearch] = useState("");
   const [genderFilter, setGenderFilter] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
@@ -34,12 +35,15 @@ export default function PlayersDirectoryPage() {
     Promise.allSettled([
       fetch("/api/players", { cache: "no-store" }).then((r) => (r.ok ? r.json() : {})),
       fetch("/api/points", { cache: "no-store" }).then((r) => (r.ok ? r.json() : {})),
+      fetch("/api/teams", { cache: "no-store" }).then((r) => (r.ok ? r.json() : {})),
     ])
-      .then(([pRes, ptRes]) => {
+      .then(([pRes, ptRes, tRes]) => {
         const pData = pRes.status === "fulfilled" ? pRes.value || {} : {};
         const ptData = ptRes.status === "fulfilled" ? ptRes.value || {} : {};
+        const tData = tRes.status === "fulfilled" ? tRes.value || {} : {};
         setPlayers(pData.players || []);
         setLeaderboard(ptData.leaderboard || []);
+        setTeams(tData.teams || []);
       })
       .catch((err) => console.error(err))
       .finally(() => setLoading(false));
@@ -96,6 +100,45 @@ export default function PlayersDirectoryPage() {
     );
     const winRate = played > 0 ? Math.round((won / played) * 100) : 0;
     return { played, won, points, winRate };
+  };
+
+  // Get player partnerships (doubles / mixed doubles partners)
+  const getPlayerPartnerships = (player) => {
+    if (player.partnerships && player.partnerships.length > 0) {
+      return player.partnerships;
+    }
+    if (!teams || teams.length === 0) return [];
+    const pId = player.id;
+    const pCustomId = player.player_id;
+    const pName = (player.full_name || "").toLowerCase().trim();
+
+    const matches = teams.filter((t) => {
+      const matchP1 =
+        t.player1_id === pId ||
+        t.player1_id === pCustomId ||
+        (t.player1 && (t.player1.id === pId || t.player1.player_id === pCustomId || (t.player1.full_name && t.player1.full_name.toLowerCase().trim() === pName)));
+      const matchP2 =
+        t.player2_id === pId ||
+        t.player2_id === pCustomId ||
+        (t.player2 && (t.player2.id === pId || t.player2.player_id === pCustomId || (t.player2.full_name && t.player2.full_name.toLowerCase().trim() === pName)));
+      return matchP1 || matchP2;
+    });
+
+    return matches.map((t) => {
+      const isP1 =
+        t.player1_id === pId ||
+        t.player1_id === pCustomId ||
+        (t.player1 && (t.player1.id === pId || t.player1.player_id === pCustomId || (t.player1.full_name && t.player1.full_name.toLowerCase().trim() === pName)));
+      const partner = isP1 ? t.player2 : t.player1;
+      const partnerName = partner?.full_name || (isP1 ? t.player2_id : t.player1_id) || "Partner";
+      return {
+        category: t.category,
+        team_id: t.id,
+        team_name: t.name,
+        partner_id: isP1 ? t.player2_id : t.player1_id,
+        partner_name: partnerName,
+      };
+    });
   };
 
   return (
@@ -171,6 +214,7 @@ export default function PlayersDirectoryPage() {
           ) : (
             paginatedPlayers.map((p) => {
               const stats = getPlayerStats(p.id);
+              const partnerships = getPlayerPartnerships(p);
               const deptName = p.contact_phone ? p.contact_phone.replace("Dept: ", "") : null;
 
               return (
@@ -223,16 +267,60 @@ export default function PlayersDirectoryPage() {
                         Registered Events
                       </span>
                       <div className="flex flex-wrap gap-1.5">
-                        {p.eligible_categories.map((c) => (
-                          <span
-                            key={c}
-                            className="text-[11px] font-semibold bg-slate-50 border border-slate-200 text-slate-700 px-2.5 py-0.5 rounded-lg"
-                          >
-                            {c}
-                          </span>
-                        ))}
+                        {p.eligible_categories.map((c) => {
+                          const ptn = partnerships.find((pt) => pt.category === c);
+                          return (
+                            <span
+                              key={c}
+                              className="text-[11px] font-semibold bg-slate-50 border border-slate-200 text-slate-700 px-2.5 py-0.5 rounded-lg flex items-center gap-1"
+                            >
+                              <span>{c}</span>
+                              {ptn && (
+                                <span className="text-[10px] text-teal-700 font-bold">
+                                  (w/ {ptn.partner_name})
+                                </span>
+                              )}
+                            </span>
+                          );
+                        })}
                       </div>
                     </div>
+
+                    {/* Doubles & Mixed Partnerships */}
+                    {partnerships.length > 0 && (
+                      <div className="mb-4 pt-3 border-t border-slate-100">
+                        <span className="text-[10px] uppercase font-bold text-muted tracking-wider flex items-center gap-1.5 mb-2">
+                          <Users className="w-3.5 h-3.5 text-teal-600" />
+                          <span>Doubles &amp; Mixed Partners</span>
+                        </span>
+                        <div className="flex flex-col gap-1.5">
+                          {partnerships.map((ptn) => (
+                            <div
+                              key={ptn.team_id || ptn.category}
+                              className="px-3 py-2 rounded-xl bg-slate-50/80 border border-slate-200/80 flex items-center justify-between gap-2"
+                            >
+                              <div className="flex items-center gap-2 min-w-0">
+                                <span
+                                  className={`text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded shrink-0 ${
+                                    ptn.category === "Mixed Doubles"
+                                      ? "bg-purple-100 text-purple-800 border border-purple-200"
+                                      : "bg-teal-100 text-teal-800 border border-teal-200"
+                                  }`}
+                                >
+                                  {ptn.category === "Mixed Doubles" ? "Mixed" : "Doubles"}
+                                </span>
+                                <span className="text-xs font-bold text-primary truncate">
+                                  {ptn.partner_name}
+                                </span>
+                              </div>
+                              <span className="text-[10px] font-semibold text-teal-700 shrink-0">
+                                Partner
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Player Stats Bar */}

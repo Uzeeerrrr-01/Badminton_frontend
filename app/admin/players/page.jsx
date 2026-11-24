@@ -19,6 +19,7 @@ import {
 
 export default function AdminPlayersPage() {
   const [players, setPlayers] = useState([]);
+  const [teams, setTeams] = useState([]);
   const [search, setSearch] = useState("");
   const [genderFilter, setGenderFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -53,9 +54,14 @@ export default function AdminPlayersPage() {
 
   const fetchPlayers = async () => {
     try {
-      const res = await fetch("/api/players");
-      const data = await res.json();
-      setPlayers(data.players || []);
+      const [pRes, tRes] = await Promise.all([
+        fetch("/api/players"),
+        fetch("/api/teams"),
+      ]);
+      const pData = await pRes.json();
+      const tData = await tRes.json();
+      setPlayers(pData.players || []);
+      setTeams(tData.teams || []);
     } catch (err) {
       console.error(err);
     } finally {
@@ -66,6 +72,44 @@ export default function AdminPlayersPage() {
   useEffect(() => {
     fetchPlayers();
   }, []);
+
+  const getPlayerPartnerships = (player) => {
+    if (player.partnerships && player.partnerships.length > 0) {
+      return player.partnerships;
+    }
+    if (!teams || teams.length === 0) return [];
+    const pId = player.id;
+    const pCustomId = player.player_id;
+    const pName = (player.full_name || "").toLowerCase().trim();
+
+    const matches = teams.filter((t) => {
+      const matchP1 =
+        t.player1_id === pId ||
+        t.player1_id === pCustomId ||
+        (t.player1 && (t.player1.id === pId || t.player1.player_id === pCustomId || (t.player1.full_name && t.player1.full_name.toLowerCase().trim() === pName)));
+      const matchP2 =
+        t.player2_id === pId ||
+        t.player2_id === pCustomId ||
+        (t.player2 && (t.player2.id === pId || t.player2.player_id === pCustomId || (t.player2.full_name && t.player2.full_name.toLowerCase().trim() === pName)));
+      return matchP1 || matchP2;
+    });
+
+    return matches.map((t) => {
+      const isP1 =
+        t.player1_id === pId ||
+        t.player1_id === pCustomId ||
+        (t.player1 && (t.player1.id === pId || t.player1.player_id === pCustomId || (t.player1.full_name && t.player1.full_name.toLowerCase().trim() === pName)));
+      const partner = isP1 ? t.player2 : t.player1;
+      const partnerName = partner?.full_name || (isP1 ? t.player2_id : t.player1_id) || "Partner";
+      return {
+        category: t.category,
+        team_id: t.id,
+        team_name: t.name,
+        partner_id: isP1 ? t.player2_id : t.player1_id,
+        partner_name: partnerName,
+      };
+    });
+  };
 
   const openCreateModal = () => {
     setEditingPlayer(null);
@@ -328,16 +372,29 @@ export default function AdminPlayersPage() {
                       </span>
                     </td>
                     <td className="py-3.5 px-4">
-                      <div className="flex flex-wrap gap-1">
-                        {(p.eligible_categories || []).map((cat) => (
-                          <span
-                            key={cat}
-                            className="bg-slate-100 text-slate-700 text-[10px] font-medium px-2 py-0.5 rounded-md border border-slate-200/80"
-                          >
-                            {cat}
-                          </span>
-                        ))}
-                      </div>
+                      {(() => {
+                        const partnerships = getPlayerPartnerships(p);
+                        return (
+                          <div className="flex flex-col gap-1.5">
+                            {(p.eligible_categories || []).map((cat) => {
+                              const ptn = partnerships.find((pt) => pt.category === cat);
+                              return (
+                                <div key={cat} className="flex items-center gap-1.5 flex-wrap">
+                                  <span className="bg-slate-100 text-slate-700 text-[10px] font-medium px-2 py-0.5 rounded-md border border-slate-200/80">
+                                    {cat}
+                                  </span>
+                                  {ptn && (
+                                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-teal-800 bg-teal-50 px-2 py-0.5 rounded-md border border-teal-200">
+                                      <Users className="w-2.5 h-2.5 text-teal-600" />
+                                      <span>w/ {ptn.partner_name}</span>
+                                    </span>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        );
+                      })()}
                     </td>
                     <td className="py-3.5 px-4 text-center">
                       <span className="font-semibold text-primary">{p.matches_played || 0}</span>
@@ -506,6 +563,33 @@ export default function AdminPlayersPage() {
                   <span>{formError}</span>
                 </div>
               )}
+
+              {/* Registered Partnerships Info Banner */}
+              {editingPlayer && (() => {
+                const parts = getPlayerPartnerships(editingPlayer);
+                if (parts.length === 0) return null;
+                return (
+                  <div className="p-3.5 bg-teal-50/80 border border-teal-200 rounded-xl space-y-2">
+                    <div className="font-bold text-teal-900 text-xs flex items-center gap-1.5">
+                      <Users className="w-4 h-4 text-teal-600" />
+                      <span>Active Doubles Partnerships</span>
+                    </div>
+                    <div className="space-y-1.5">
+                      {parts.map((ptn) => (
+                        <div key={ptn.team_id || ptn.category} className="text-xs bg-white/80 p-2 rounded-lg border border-teal-100 flex items-center justify-between gap-2">
+                          <span className="font-bold text-slate-600 text-[11px]">{ptn.category}:</span>
+                          <span className="font-extrabold text-teal-800 text-[11px] flex items-center gap-1">
+                            <span>Partner: {ptn.partner_name}</span>
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-[10px] text-muted">
+                      💡 To create, change, or rename doubles teams, visit the Teams Management section.
+                    </p>
+                  </div>
+                );
+              })()}
 
               <div>
                 <label className="block font-semibold text-primary uppercase tracking-wider mb-1">
