@@ -57,6 +57,7 @@ export default function MatchScoringConsole({ params }) {
   const [showTossModal, setShowTossModal] = useState(false);
   const [actionInProgress, setActionInProgress] = useState(false);
   const [confirmCompleteOpen, setConfirmCompleteOpen] = useState(false);
+  const [confirmRestartOpen, setConfirmRestartOpen] = useState(false);
 
   // Fault modal state
   const [pendingTeam, setPendingTeam] = useState(null);
@@ -194,6 +195,23 @@ export default function MatchScoringConsole({ params }) {
       broadcastScoreUpdate(data.match);
     } catch (err) {
       setError(err.message);
+    }
+  };
+
+  const executeRestartMatch = async () => {
+    setActionInProgress(true);
+    setError("");
+    try {
+      const res = await fetch(`/api/matches/${matchId}/restart`, { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to restart match.");
+      setConfirmRestartOpen(false);
+      setMatch(data.match);
+      broadcastScoreUpdate(data.match);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setActionInProgress(false);
     }
   };
 
@@ -494,13 +512,23 @@ export default function MatchScoringConsole({ params }) {
                 ? "Won on timer expiry with a point advantage"
                 : "Match concluded"}
             </span>
-            <Link
-              href="/admin/matches"
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#101C2B] text-white text-xs font-semibold hover:bg-[#172033] transition-colors shadow-xs"
-            >
-              <span>Next fixture</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setConfirmRestartOpen(true)}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-rose-200 bg-rose-50 text-rose-700 text-xs font-semibold hover:bg-rose-100 transition-colors"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Restart Match (0–0)</span>
+              </button>
+              <Link
+                href="/admin/matches"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#101C2B] text-white text-xs font-semibold hover:bg-[#172033] transition-colors shadow-xs"
+              >
+                <span>Next fixture</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
           </div>
         </div>
 
@@ -884,6 +912,16 @@ export default function MatchScoringConsole({ params }) {
               <CheckCircle2 className="w-3.5 h-3.5 text-rose-600" />
               Conclude Match
             </button>
+
+            <button
+              type="button"
+              onClick={() => setConfirmRestartOpen(true)}
+              disabled={actionInProgress}
+              className="py-2.5 px-3.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 text-xs font-semibold hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 flex items-center justify-center gap-1.5 transition-colors"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              Restart (0–0)
+            </button>
           </div>
         </div>
       )}
@@ -1031,6 +1069,18 @@ export default function MatchScoringConsole({ params }) {
         submitting={actionInProgress}
         onConfirm={() => executeStatusChange("completed")}
         onClose={() => setConfirmCompleteOpen(false)}
+      />
+
+      <ConfirmModal
+        isOpen={confirmRestartOpen}
+        title="Restart Match from Zero?"
+        message="This will reset the score to 0 - 0, clear all rally history and timer progress, revert any awarded leaderboard points, and return the match to pre-toss setup."
+        confirmText="Yes, Restart (0–0)"
+        cancelText="Cancel"
+        variant="danger"
+        submitting={actionInProgress}
+        onConfirm={executeRestartMatch}
+        onClose={() => setConfirmRestartOpen(false)}
       />
     </div>
   );

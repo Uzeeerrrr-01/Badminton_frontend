@@ -27,6 +27,7 @@ import {
   X,
   HelpCircle,
 } from "lucide-react";
+import ConfirmModal from "@/components/ConfirmModal";
 
 const CATEGORIES = [
   "Men's Singles",
@@ -61,6 +62,10 @@ export default function AdminRoundsPage() {
   const [resetModalOpen, setResetModalOpen] = useState(false);
   const [roundToReset, setRoundToReset] = useState(null);
   const [resetSubmitting, setResetSubmitting] = useState(false);
+
+  // Restart match confirmation modal
+  const [matchToRestart, setMatchToRestart] = useState(null);
+  const [restartSubmitting, setRestartSubmitting] = useState(false);
 
   // Fetch Category Overview
   const fetchOverview = useCallback(async () => {
@@ -189,6 +194,29 @@ export default function AdminRoundsPage() {
       setError(err.message);
     } finally {
       setResetSubmitting(false);
+    }
+  };
+
+  // Handle Restart Match from Zero
+  const handleRestartMatchSubmit = async () => {
+    if (!matchToRestart) return;
+    setRestartSubmitting(true);
+    setError("");
+    try {
+      const res = await fetch(`/api/matches/${matchToRestart.id}/restart`, {
+        method: "POST",
+        credentials: "include",
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Failed to restart match.");
+
+      setSuccessMsg(`Match #${matchToRestart.match_number} restarted from 0 - 0.`);
+      setMatchToRestart(null);
+      await fetchOverview();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setRestartSubmitting(false);
     }
   };
 
@@ -702,13 +730,26 @@ export default function AdminRoundsPage() {
                                   </span>
                                 )}
 
-                                <Link
-                                  href={`/admin/scoring/${m.id}`}
-                                  className="px-3 py-1.5 rounded-lg bg-primary text-white text-[11px] font-bold hover:bg-secondary transition-colors inline-flex items-center gap-1 shadow-subtle"
-                                >
-                                  <Play className="w-3 h-3 fill-current" />
-                                  <span>{isDone ? "Review Match" : "Umpire Console"}</span>
-                                </Link>
+                                <div className="flex items-center gap-1.5">
+                                  {(isLive || isDone || m.status === "paused" || m.status === "tied") && (
+                                    <button
+                                      type="button"
+                                      onClick={() => setMatchToRestart(m)}
+                                      className="px-2.5 py-1.5 rounded-lg border border-rose-200 bg-rose-50 text-rose-700 text-[11px] font-bold hover:bg-rose-100 transition-colors inline-flex items-center gap-1"
+                                      title="Restart Match from Zero (0–0)"
+                                    >
+                                      <RotateCcw className="w-3 h-3" />
+                                      <span>Restart</span>
+                                    </button>
+                                  )}
+                                  <Link
+                                    href={`/admin/scoring/${m.id}`}
+                                    className="px-3 py-1.5 rounded-lg bg-primary text-white text-[11px] font-bold hover:bg-secondary transition-colors inline-flex items-center gap-1 shadow-subtle"
+                                  >
+                                    <Play className="w-3 h-3 fill-current" />
+                                    <span>{isDone ? "Review Match" : "Umpire Console"}</span>
+                                  </Link>
+                                </div>
                               </div>
                             </div>
                           );
@@ -1226,6 +1267,22 @@ export default function AdminRoundsPage() {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={Boolean(matchToRestart)}
+        title="Restart Match from Zero?"
+        message={
+          matchToRestart
+            ? `Reset Match #${matchToRestart.match_number} (${matchToRestart.team_a_name} vs ${matchToRestart.team_b_name}) back to 0 - 0? All rally history will be cleared, any awarded leaderboard points will be reverted, and the match will return to pre-toss setup.`
+            : ""
+        }
+        confirmText="Restart (0–0)"
+        cancelText="Cancel"
+        variant="danger"
+        submitting={restartSubmitting}
+        onConfirm={handleRestartMatchSubmit}
+        onClose={() => !restartSubmitting && setMatchToRestart(null)}
+      />
     </div>
   );
 }

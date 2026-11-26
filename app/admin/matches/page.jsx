@@ -23,6 +23,7 @@ import {
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
+  RotateCcw,
 } from "lucide-react";
 import ConfirmModal from "@/components/ConfirmModal";
 import ToastNotification from "@/components/ToastNotification";
@@ -453,6 +454,33 @@ export default function AdminMatchesPage() {
     });
   };
 
+  const requestRestartMatch = (match) => {
+    setConfirmDialog({
+      isOpen: true,
+      title: "Restart Match from Zero?",
+      message: `Reset Match #${match.match_number || ""} (${match.team_a_name} vs ${match.team_b_name}) back to 0 - 0? All rally history will be cleared, any awarded leaderboard points will be reverted, and the match will return to pre-toss setup.`,
+      confirmText: "Restart (0–0)",
+      variant: "danger",
+      action: async () => {
+        setConfirmSubmitting(true);
+        try {
+          const res = await fetch(`/api/matches/${match.id}/restart`, { method: "POST" });
+          if (!res.ok) {
+            const d = await res.json().catch(() => ({}));
+            throw new Error(d.error || "Failed to restart match.");
+          }
+          setToast({ message: "Match restarted from 0 - 0.", type: "success" });
+          setConfirmDialog({ isOpen: false, title: "", message: "", action: null });
+          fetchData();
+        } catch (err) {
+          setToast({ message: err.message, type: "error" });
+        } finally {
+          setConfirmSubmitting(false);
+        }
+      },
+    });
+  };
+
   const requestEndMatch = (matchId) => {
     setConfirmDialog({
       isOpen: true,
@@ -711,6 +739,17 @@ export default function AdminMatchesPage() {
                     >
                       View Event Log
                     </Link>
+                  )}
+
+                  {!isScheduled && (
+                    <button
+                      type="button"
+                      onClick={() => requestRestartMatch(m)}
+                      className="p-2 text-muted hover:text-amber-700 hover:bg-amber-50 rounded-xl transition-colors"
+                      title="Restart Match from Zero (0–0)"
+                    >
+                      <RotateCcw className="w-4 h-4" />
+                    </button>
                   )}
 
                   <button
@@ -1145,7 +1184,7 @@ export default function AdminMatchesPage() {
                 }
                 className="w-full px-3 py-2 border border-border rounded-xl bg-white text-primary focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
               >
-                {CATEGORIES.map((c) => (
+                {Object.values(CATEGORIES).map((c) => (
                   <option key={c} value={c}>
                     {c}
                   </option>

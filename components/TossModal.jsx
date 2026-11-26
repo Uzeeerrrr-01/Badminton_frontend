@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { X, Trophy, Shuffle, CheckCircle2 } from "lucide-react";
+import { X, Trophy, Shuffle, CheckCircle2, Timer } from "lucide-react";
 import { isDoublesCategory } from "@/lib/scoringEngine";
 
 export default function TossModal({ isOpen, onClose, match, onConfirmStart }) {
@@ -12,6 +12,15 @@ export default function TossModal({ isOpen, onClose, match, onConfirmStart }) {
   const [tossWinner, setTossWinner] = useState("A");
   const [tossChoice, setTossChoice] = useState("serve"); // 'serve' | 'receive'
   const [courtSideA, setCourtSideA] = useState("left"); // 'left' | 'right'
+
+  const existingDuration = Number(match.timer_duration_seconds || 0);
+  const [timerEnabled, setTimerEnabled] = useState(Boolean(match.timer_enabled));
+  const [timerMinutes, setTimerMinutes] = useState(
+    existingDuration > 0 ? Math.floor(existingDuration / 60) : 10
+  );
+  const [timerSeconds, setTimerSeconds] = useState(
+    existingDuration > 0 ? existingDuration % 60 : 0
+  );
 
   // Server & Receiver selections
   const teamAPlayers = [
@@ -78,12 +87,15 @@ export default function TossModal({ isOpen, onClose, match, onConfirmStart }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    const totalSeconds = Math.max(0, (Number(timerMinutes) || 0) * 60 + (Number(timerSeconds) || 0));
     onConfirmStart({
       tossWinner,
       tossChoice,
       courtSideA,
       initialServerId,
       initialReceiverId,
+      timer_enabled: timerEnabled && totalSeconds > 0,
+      timer_duration_seconds: timerEnabled ? totalSeconds : 0,
     });
   };
 
@@ -240,6 +252,83 @@ export default function TossModal({ isOpen, onClose, match, onConfirmStart }) {
               </div>
             </div>
           )}
+
+          {/* Custom Match Timer (Optional) */}
+          <div className="pt-3 border-t border-border space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <Timer className="w-4 h-4 text-teal-600" />
+                <span className="text-xs font-semibold text-primary uppercase tracking-wider">
+                  Custom Match Timer
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setTimerEnabled(!timerEnabled)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  timerEnabled ? "bg-emerald-600" : "bg-slate-300"
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    timerEnabled ? "translate-x-6" : "translate-x-1"
+                  }`}
+                />
+              </button>
+            </div>
+
+            {timerEnabled && (
+              <div className="space-y-2.5 p-3 rounded-xl bg-slate-50 border border-border">
+                <div className="flex flex-wrap gap-1.5">
+                  {[5, 10, 15, 20].map((m) => (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => {
+                        setTimerMinutes(m);
+                        setTimerSeconds(0);
+                      }}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-semibold border transition-colors ${
+                        Number(timerMinutes) === m && Number(timerSeconds) === 0
+                          ? "bg-primary text-white border-primary"
+                          : "bg-white text-slate-700 border-border hover:bg-slate-100"
+                      }`}
+                    >
+                      {m} min
+                    </button>
+                  ))}
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                      Minutes
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="120"
+                      value={timerMinutes}
+                      onChange={(e) => setTimerMinutes(e.target.value)}
+                      className="w-full px-3 py-1.5 border border-border rounded-lg bg-white text-primary font-mono text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                      Seconds
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="59"
+                      value={timerSeconds}
+                      onChange={(e) => setTimerSeconds(e.target.value)}
+                      className="w-full px-3 py-1.5 border border-border rounded-lg bg-white text-primary font-mono text-sm"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Submit */}
           <div className="pt-4 border-t border-border flex justify-end gap-3">
