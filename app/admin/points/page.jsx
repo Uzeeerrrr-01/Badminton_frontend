@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Trophy,
   Plus,
@@ -17,17 +17,26 @@ import {
   ChevronsRight,
   Layers,
   ListOrdered,
+  Edit2,
+  Trash2,
+  RotateCcw,
 } from "lucide-react";
+import ConfirmModal from "@/components/ConfirmModal";
+import ToastNotification from "@/components/ToastNotification";
+import { useLiveLeaderboard } from "@/lib/useLiveLeaderboard";
 
 export default function AdminPointsPage() {
-  const [leaderboard, setLeaderboard] = useState([]);
-  const [history, setHistory] = useState([]);
+  const {
+    leaderboard,
+    history,
+    categoryLeaders,
+    loading,
+    refresh: refreshLeaderboard,
+  } = useLiveLeaderboard();
   const [players, setPlayers] = useState([]);
   const [teams, setTeams] = useState([]);
-  const [categoryLeaders, setCategoryLeaders] = useState({});
   const [categoryFilter, setCategoryFilter] = useState("All");
   const [viewMode, setViewMode] = useState("by_category"); // "by_category" | "table"
-  const [loading, setLoading] = useState(true);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -42,6 +51,33 @@ export default function AdminPointsPage() {
   const [adjReason, setAdjReason] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+
+  // Edit Leaderboard Entry <dialog>
+  const editDialogRef = useRef(null);
+  const [editingEntry, setEditingEntry] = useState(null);
+  const [editForm, setEditForm] = useState({
+    matches_played: 0,
+    matches_won: 0,
+    matches_lost: 0,
+    points_scored: 0,
+    points_conceded: 0,
+    total_tournament_points: 0,
+    reason: "",
+  });
+  const [editError, setEditError] = useState("");
+  const [editSubmitting, setEditSubmitting] = useState(false);
+
+  // Confirm & Toast
+  const [confirmDialog, setConfirmDialog] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    confirmText: "Confirm",
+    variant: "danger",
+    action: null,
+  });
+  const [confirmSubmitting, setConfirmSubmitting] = useState(false);
+  const [toast, setToast] = useState({ message: "", type: "info" });
 
   const categories = [
     "All",
@@ -61,52 +97,26 @@ export default function AdminPointsPage() {
   ];
 
   const fetchData = async () => {
+    refreshLeaderboard();
     try {
-      const [ptRes, pRes, tRes] = await Promise.allSettled([
-        fetch("/api/points", { cache: "no-store" }).then((r) => (r.ok ? r.json() : {})),
+      const [pRes, tRes] = await Promise.allSettled([
         fetch("/api/players", { cache: "no-store" }).then((r) => (r.ok ? r.json() : {})),
         fetch("/api/teams", { cache: "no-store" }).then((r) => (r.ok ? r.json() : {})),
       ]);
-      const ptData = ptRes.status === "fulfilled" ? ptRes.value || {} : {};
       const pData = pRes.status === "fulfilled" ? pRes.value || {} : {};
       const tData = tRes.status === "fulfilled" ? tRes.value || {} : {};
 
       const playerList = pData.players || (Array.isArray(pData) ? pData : []);
       const teamList = tData.teams || (Array.isArray(tData) ? tData : []);
-      const lbList = ptData.leaderboard || (Array.isArray(ptData) ? ptData : []);
 
-      setLeaderboard(lbList);
-      setHistory(ptData.history || []);
       setPlayers(playerList);
       setTeams(teamList);
 
-      if (ptData.categoryLeaders && Object.keys(ptData.categoryLeaders).length > 0) {
-        setCategoryLeaders(ptData.categoryLeaders);
-      } else {
-        const leaders = {};
-        specificCategories.forEach((cat) => {
-          const catRecords = lbList
-            .filter((r) => r.category === cat)
-            .sort(
-              (a, b) =>
-                (b.total_tournament_points || 0) - (a.total_tournament_points || 0) ||
-                (b.matches_won || 0) - (a.matches_won || 0)
-            );
-          leaders[cat] = {
-            leader: catRecords[0] || null,
-            totalParticipants: catRecords.length,
-          };
-        });
-        setCategoryLeaders(leaders);
-      }
-
       if (playerList.length > 0) {
-        setAdjEntityId(playerList[0].id);
+        setAdjEntityId((prev) => prev || playerList[0].id);
       }
     } catch (err) {
       console.error(err);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -175,12 +185,115 @@ export default function AdminPointsPage() {
 
       setModalOpen(false);
       setAdjReason("");
+      setToast({ message: "Points adjusted successfully.", type: "success" });
       fetchData();
     } catch (err) {
       setError(err.message);
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const openEditModal = (entry) => {
+    setEditingEntry(entry);
+    setEditForm({
+      matches_played: entry.matches_played ?? 0,
+      matches_won: entry.matches_won ?? 0,
+      matches_lost: entry.matches_lost ?? 0,
+      points_scored: entry.points_scored ?? 0,
+      points_conceded: entry.points_conceded ?? 0,
+      total_tournament_points: entry.total_tournament_points ?? 0,
+      reason: "Manual Leaderboard Edit",
+    });
+    setEditError("");
+    editDialogRef.current?.showModal();
+  };
+
+  const closeEditModal = () => {
+    editDialogRef.current?.close();
+    setEditingEntry(null);
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    if (!editingEntry) return;
+    setEditError("");
+    setEditSubmitting(true);
+    try {
+      const res = await fetch(`/api/points/${editingEntry.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          matches_played: Number(editForm.matches_played),
+          matches_won: Number(editForm.matches_won),
+          matches_lost: Number(editForm.matches_lost),
+          points_scored: Number(editForm.points_scored),
+          points_conceded: Number(editForm.points_conceded),
+          total_tournament_points: Number(editForm.total_tournament_points),
+          reason: editForm.reason.trim() || "Manual Leaderboard Edit",
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Failed to update leaderboard entry.");
+      closeEditModal();
+      setToast({ message: `Updated standings for ${editingEntry.entity_name}.`, type: "success" });
+      fetchData();
+    } catch (err) {
+      setEditError(err.message);
+    } finally {
+      setEditSubmitting(false);
+    }
+  };
+
+  const requestDeleteEntry = (entry) => {
+    setConfirmDialog({
+      isOpen: true,
+      title: "Remove from Leaderboard?",
+      message: `Are you sure you want to delete ${entry.entity_name} (${entry.category}) from the leaderboard?`,
+      confirmText: "Delete Entry",
+      variant: "danger",
+      action: async () => {
+        setConfirmSubmitting(true);
+        try {
+          const res = await fetch(`/api/points/${entry.id}`, { method: "DELETE" });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(data.error || "Failed to delete leaderboard entry.");
+          setConfirmDialog({ isOpen: false, title: "", message: "", action: null });
+          setToast({ message: `Removed ${entry.entity_name} from leaderboard.`, type: "success" });
+          fetchData();
+        } catch (err) {
+          setToast({ message: err.message, type: "error" });
+        } finally {
+          setConfirmSubmitting(false);
+        }
+      },
+    });
+  };
+
+  const requestResetLeaderboard = () => {
+    setConfirmDialog({
+      isOpen: true,
+      title: "Clear Entire Leaderboard?",
+      message:
+        "This will permanently remove all leaderboard standings, point history logs, and reset player/team points to 0. Players, teams, and fixtures will not be deleted.",
+      confirmText: "Clear Leaderboard",
+      variant: "danger",
+      action: async () => {
+        setConfirmSubmitting(true);
+        try {
+          const res = await fetch("/api/points", { method: "DELETE" });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(data.error || "Failed to clear leaderboard.");
+          setConfirmDialog({ isOpen: false, title: "", message: "", action: null });
+          setToast({ message: "All leaderboard data cleared.", type: "success" });
+          fetchData();
+        } catch (err) {
+          setToast({ message: err.message, type: "error" });
+        } finally {
+          setConfirmSubmitting(false);
+        }
+      },
+    });
   };
 
   return (
@@ -196,14 +309,25 @@ export default function AdminPointsPage() {
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={() => setModalOpen(true)}
-          className="px-4 py-2.5 rounded-xl bg-primary hover:bg-secondary text-white text-xs font-bold transition-colors shadow-subtle flex items-center gap-2 self-start sm:self-auto"
-        >
-          <Plus className="w-4 h-4 text-teal-400" />
-          Manual Point Adjustment
-        </button>
+        <div className="flex flex-wrap items-center gap-2.5 self-start sm:self-auto">
+          <button
+            type="button"
+            onClick={requestResetLeaderboard}
+            className="px-4 py-2.5 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold transition-colors flex items-center gap-2"
+          >
+            <RotateCcw className="w-4 h-4" />
+            Clear Leaderboard
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setModalOpen(true)}
+            className="px-4 py-2.5 rounded-xl bg-primary hover:bg-secondary text-white text-xs font-bold transition-colors shadow-subtle flex items-center gap-2"
+          >
+            <Plus className="w-4 h-4 text-teal-400" />
+            Manual Point Adjustment
+          </button>
+        </div>
       </div>
 
       {/* Category Toppers & Division Champions Showcase */}
@@ -229,11 +353,10 @@ export default function AdminPointsPage() {
                 key={cat}
                 type="button"
                 onClick={() => setCategoryFilter(categoryFilter === cat ? "All" : cat)}
-                className={`p-3.5 rounded-2xl border text-left transition-all flex flex-col justify-between ${
-                  isSelected
-                    ? "bg-amber-50/80 border-amber-400 ring-1 ring-amber-400 shadow-subtle"
-                    : "bg-white border-border hover:border-slate-300 shadow-subtle"
-                }`}
+                className={`p-3.5 rounded-2xl border text-left transition-all flex flex-col justify-between ${isSelected
+                  ? "bg-amber-50/80 border-amber-400 ring-1 ring-amber-400 shadow-subtle"
+                  : "bg-white border-border hover:border-slate-300 shadow-subtle"
+                  }`}
               >
                 <div>
                   <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider mb-1.5">
@@ -270,11 +393,10 @@ export default function AdminPointsPage() {
               key={cat}
               type="button"
               onClick={() => setCategoryFilter(cat)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
-                categoryFilter === cat
-                  ? "bg-primary text-white shadow-subtle"
-                  : "bg-white border border-border text-slate-700 hover:bg-slate-50"
-              }`}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${categoryFilter === cat
+                ? "bg-primary text-white shadow-subtle"
+                : "bg-white border border-border text-slate-700 hover:bg-slate-50"
+                }`}
             >
               {cat}
             </button>
@@ -286,11 +408,10 @@ export default function AdminPointsPage() {
           <button
             type="button"
             onClick={() => setViewMode("by_category")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
-              viewMode === "by_category"
-                ? "bg-white text-primary shadow-xs border border-border"
-                : "text-muted hover:text-primary"
-            }`}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${viewMode === "by_category"
+              ? "bg-white text-primary shadow-xs border border-border"
+              : "text-muted hover:text-primary"
+              }`}
           >
             <Layers className="w-3.5 h-3.5 text-teal-600" />
             <span>By Category</span>
@@ -298,11 +419,10 @@ export default function AdminPointsPage() {
           <button
             type="button"
             onClick={() => setViewMode("table")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
-              viewMode === "table"
-                ? "bg-white text-primary shadow-xs border border-border"
-                : "text-muted hover:text-primary"
-            }`}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${viewMode === "table"
+              ? "bg-white text-primary shadow-xs border border-border"
+              : "text-muted hover:text-primary"
+              }`}
           >
             <ListOrdered className="w-3.5 h-3.5 text-slate-600" />
             <span>Overall Table</span>
@@ -346,12 +466,13 @@ export default function AdminPointsPage() {
                         <th className="py-3 px-4 text-center">Losses</th>
                         <th className="py-3 px-4 text-center">Rally Points</th>
                         <th className="py-3 px-4 text-right">Tournament Points</th>
+                        <th className="py-3 px-4 text-right">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
                       {catRecords.length === 0 ? (
                         <tr>
-                          <td colSpan={7} className="py-8 text-center text-muted">
+                          <td colSpan={8} className="py-8 text-center text-muted">
                             No competitors ranked in this category yet.
                           </td>
                         </tr>
@@ -359,9 +480,8 @@ export default function AdminPointsPage() {
                         catRecords.map((r, idx) => (
                           <tr
                             key={r.id || idx}
-                            className={`hover:bg-slate-50/70 transition-colors ${
-                              idx === 0 ? "bg-amber-50/20" : ""
-                            }`}
+                            className={`hover:bg-slate-50/70 transition-colors ${idx === 0 ? "bg-amber-50/20" : ""
+                              }`}
                           >
                             <td className="py-3.5 px-4 font-bold text-primary">
                               {idx === 0 ? (
@@ -375,6 +495,12 @@ export default function AdminPointsPage() {
                             <td className="py-3.5 px-4 font-bold text-primary">
                               <div className="flex items-center gap-1.5">
                                 <span>{r.entity_name}</span>
+                                {r.is_live && (
+                                  <span className="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-rose-50 text-rose-700 border border-rose-200">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+                                    LIVE
+                                  </span>
+                                )}
                                 {idx === 0 && (
                                   <span className="inline-flex items-center gap-0.5 text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-amber-100 text-amber-900 border border-amber-300">
                                     <Crown className="w-2.5 h-2.5 text-amber-600" /> #1 Topper
@@ -392,6 +518,30 @@ export default function AdminPointsPage() {
                             </td>
                             <td className="py-3.5 px-4 text-right font-mono font-bold text-teal-700 text-sm">
                               {r.total_tournament_points} pts
+                            </td>
+                            <td className="py-3.5 px-4 text-right">
+                              {String(r.id).startsWith("live-") ? (
+                                <span className="text-[10px] text-muted italic">In Progress</span>
+                              ) : (
+                                <div className="inline-flex items-center gap-1">
+                                  <button
+                                    type="button"
+                                    onClick={() => openEditModal(r)}
+                                    className="p-1.5 rounded-lg text-muted hover:text-primary hover:bg-slate-100 transition-colors"
+                                    title="Edit Leaderboard Entry"
+                                  >
+                                    <Edit2 className="w-3.5 h-3.5" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => requestDeleteEntry(r)}
+                                    className="p-1.5 rounded-lg text-muted hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                                    title="Delete Leaderboard Entry"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              )}
                             </td>
                           </tr>
                         ))
@@ -432,12 +582,13 @@ export default function AdminPointsPage() {
                   <th className="py-3 px-4 text-center">Losses</th>
                   <th className="py-3 px-4 text-center">Rally Points (F : A)</th>
                   <th className="py-3 px-4 text-right">Tournament Points</th>
+                  <th className="py-3 px-4 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {filteredLeaderboard.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="py-12 text-center text-muted">
+                    <td colSpan={9} className="py-12 text-center text-muted">
                       No points recorded yet for this category.
                     </td>
                   </tr>
@@ -449,9 +600,8 @@ export default function AdminPointsPage() {
                     return (
                       <tr
                         key={r.id || idx}
-                        className={`hover:bg-slate-50/70 transition-colors ${
-                          isTopper ? "bg-amber-50/20" : ""
-                        }`}
+                        className={`hover:bg-slate-50/70 transition-colors ${isTopper ? "bg-amber-50/20" : ""
+                          }`}
                       >
                         <td className="py-3.5 px-4 font-bold text-primary">
                           {absoluteRank === 1 ? (
@@ -475,6 +625,12 @@ export default function AdminPointsPage() {
                         <td className="py-3.5 px-4 font-bold text-primary">
                           <div className="flex items-center gap-1.5">
                             <span>{r.entity_name}</span>
+                            {r.is_live && (
+                              <span className="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-rose-50 text-rose-700 border border-rose-200">
+                                <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+                                LIVE
+                              </span>
+                            )}
                             {isTopper && (
                               <span className="inline-flex items-center gap-0.5 text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-amber-100 text-amber-900 border border-amber-300">
                                 <Crown className="w-2.5 h-2.5 text-amber-600" /> #1 Topper
@@ -493,6 +649,30 @@ export default function AdminPointsPage() {
                         </td>
                         <td className="py-3.5 px-4 text-right font-mono font-bold text-teal-700 text-sm">
                           {r.total_tournament_points} pts
+                        </td>
+                        <td className="py-3.5 px-4 text-right">
+                          {String(r.id).startsWith("live-") ? (
+                            <span className="text-[10px] text-muted italic">In Progress</span>
+                          ) : (
+                            <div className="inline-flex items-center gap-1">
+                              <button
+                                type="button"
+                                onClick={() => openEditModal(r)}
+                                className="p-1.5 rounded-lg text-muted hover:text-primary hover:bg-slate-100 transition-colors"
+                                title="Edit Leaderboard Entry"
+                              >
+                                <Edit2 className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => requestDeleteEntry(r)}
+                                className="p-1.5 rounded-lg text-muted hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                                title="Delete Leaderboard Entry"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          )}
                         </td>
                       </tr>
                     );
@@ -559,11 +739,10 @@ export default function AdminPointsPage() {
                         key={page}
                         type="button"
                         onClick={() => setCurrentPage(page)}
-                        className={`min-w-7 h-7 px-2 rounded-lg text-xs font-semibold transition-all ${
-                          page === safeCurrentPage
-                            ? "bg-primary text-white shadow-xs"
-                            : "bg-white border border-border text-slate-700 hover:bg-slate-100"
-                        }`}
+                        className={`min-w-7 h-7 px-2 rounded-lg text-xs font-semibold transition-all ${page === safeCurrentPage
+                          ? "bg-primary text-white shadow-xs"
+                          : "bg-white border border-border text-slate-700 hover:bg-slate-100"
+                          }`}
                       >
                         {page}
                       </button>
@@ -690,15 +869,15 @@ export default function AdminPointsPage() {
                 >
                   {adjEntityType === "player"
                     ? players.map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.full_name} ({p.player_id})
-                        </option>
-                      ))
+                      <option key={p.id} value={p.id}>
+                        {p.full_name} ({p.player_id})
+                      </option>
+                    ))
                     : teams.map((t) => (
-                        <option key={t.id} value={t.id}>
-                          {t.name} ({t.category})
-                        </option>
-                      ))}
+                      <option key={t.id} value={t.id}>
+                        {t.name} ({t.category})
+                      </option>
+                    ))}
                 </select>
               </div>
 
@@ -767,6 +946,175 @@ export default function AdminPointsPage() {
           </div>
         </div>
       )}
+
+      {/* Edit Leaderboard Entry Modal (Native <dialog>) */}
+      <dialog
+        ref={editDialogRef}
+        aria-labelledby="edit-leaderboard-title"
+        className="rounded-2xl max-w-md w-full border border-border shadow-elevated p-0 overflow-hidden bg-white m-auto"
+      >
+        <div className="px-6 py-4 border-b border-border flex items-center justify-between bg-slate-50">
+          <div>
+            <h1 id="edit-leaderboard-title" className="font-heading font-bold text-primary text-sm">
+              Edit Leaderboard Entry
+            </h1>
+            {editingEntry && (
+              <p className="text-[11px] text-muted mt-0.5">
+                {editingEntry.entity_name} • {editingEntry.category}
+              </p>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={closeEditModal}
+            aria-label="Close edit dialog"
+            className="p-1 rounded-lg text-muted hover:text-primary hover:bg-slate-200 transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <form onSubmit={handleEditSubmit} className="p-6 space-y-4 text-xs">
+          {editError && (
+            <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+              <span>{editError}</span>
+            </div>
+          )}
+
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <label className="block font-semibold text-primary uppercase tracking-wider mb-1">
+                Played
+              </label>
+              <input
+                type="number"
+                min="0"
+                required
+                autoFocus
+                value={editForm.matches_played}
+                onChange={(e) => setEditForm({ ...editForm, matches_played: e.target.value })}
+                className="w-full px-3 py-2 border border-border rounded-xl bg-white text-primary font-mono focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+              />
+            </div>
+            <div>
+              <label className="block font-semibold text-primary uppercase tracking-wider mb-1">
+                Wins
+              </label>
+              <input
+                type="number"
+                min="0"
+                required
+                value={editForm.matches_won}
+                onChange={(e) => setEditForm({ ...editForm, matches_won: e.target.value })}
+                className="w-full px-3 py-2 border border-border rounded-xl bg-white text-primary font-mono focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+              />
+            </div>
+            <div>
+              <label className="block font-semibold text-primary uppercase tracking-wider mb-1">
+                Losses
+              </label>
+              <input
+                type="number"
+                min="0"
+                required
+                value={editForm.matches_lost}
+                onChange={(e) => setEditForm({ ...editForm, matches_lost: e.target.value })}
+                className="w-full px-3 py-2 border border-border rounded-xl bg-white text-primary font-mono focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block font-semibold text-primary uppercase tracking-wider mb-1">
+                Rally Points For
+              </label>
+              <input
+                type="number"
+                min="0"
+                required
+                value={editForm.points_scored}
+                onChange={(e) => setEditForm({ ...editForm, points_scored: e.target.value })}
+                className="w-full px-3 py-2 border border-border rounded-xl bg-white text-primary font-mono focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+              />
+            </div>
+            <div>
+              <label className="block font-semibold text-primary uppercase tracking-wider mb-1">
+                Rally Points Against
+              </label>
+              <input
+                type="number"
+                min="0"
+                required
+                value={editForm.points_conceded}
+                onChange={(e) => setEditForm({ ...editForm, points_conceded: e.target.value })}
+                className="w-full px-3 py-2 border border-border rounded-xl bg-white text-primary font-mono focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block font-semibold text-primary uppercase tracking-wider mb-1">
+              Tournament Points
+            </label>
+            <input
+              type="number"
+              required
+              value={editForm.total_tournament_points}
+              onChange={(e) => setEditForm({ ...editForm, total_tournament_points: e.target.value })}
+              className="w-full px-3 py-2 border border-border rounded-xl bg-white text-primary font-mono font-bold focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+            />
+          </div>
+
+          <div>
+            <label className="block font-semibold text-primary uppercase tracking-wider mb-1">
+              Audit Reason
+            </label>
+            <input
+              type="text"
+              value={editForm.reason}
+              onChange={(e) => setEditForm({ ...editForm, reason: e.target.value })}
+              placeholder="e.g. Score correction"
+              className="w-full px-3 py-2 border border-border rounded-xl bg-white text-primary focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+            />
+          </div>
+
+          <div className="pt-4 border-t border-border flex justify-end gap-3">
+            <button
+              type="button"
+              onClick={closeEditModal}
+              className="px-4 py-2 font-semibold text-muted hover:text-primary transition-colors text-xs"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={editSubmitting}
+              className="px-5 py-2.5 font-bold rounded-xl bg-primary text-white hover:bg-secondary transition-colors text-xs disabled:opacity-50 shadow-subtle"
+            >
+              {editSubmitting ? "Saving..." : "Save Changes"}
+            </button>
+          </div>
+        </form>
+      </dialog>
+
+      <ConfirmModal
+        isOpen={confirmDialog.isOpen}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        confirmText={confirmDialog.confirmText}
+        variant={confirmDialog.variant}
+        submitting={confirmSubmitting}
+        onConfirm={confirmDialog.action}
+        onClose={() => !confirmSubmitting && setConfirmDialog({ isOpen: false, title: "", message: "", action: null })}
+      />
+
+      <ToastNotification
+        message={toast.message}
+        type={toast.type}
+        onClose={() => setToast({ message: "", type: "info" })}
+      />
     </div>
   );
 }

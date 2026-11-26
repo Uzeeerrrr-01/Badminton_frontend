@@ -65,3 +65,15 @@ export async function POST(request) {
     return NextResponse.json({ error: err.message }, { status: 400 });
   }
 }
+
+export async function DELETE(request) {
+  const proxied = await forwardToBackend(request, "/api/points");
+  if (proxied) return proxied;
+
+  const session = getAdminSession(request);
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized. Admin access required." }, { status: 401 });
+  }
+
+  return NextResponse.json({ error: "Backend service unavailable." }, { status: 503 });
+}
