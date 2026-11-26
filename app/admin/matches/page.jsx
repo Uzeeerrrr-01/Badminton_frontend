@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -76,6 +76,29 @@ export default function AdminMatchesPage() {
   });
   const [formError, setFormError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  // Edit match <dialog>
+  const editMatchDialogRef = useRef(null);
+  const [editingMatch, setEditingMatch] = useState(null);
+  const [editMatchForm, setEditMatchForm] = useState({
+    category: "Men's Singles",
+    round: "Round 1",
+    court_number: 1,
+    scheduled_time: "",
+    participantA_id: "",
+    participantB_id: "",
+    score_a: 0,
+    score_b: 0,
+    status: "scheduled",
+    winner_team: "",
+    next_match_id: "",
+    next_match_slot: "A",
+    timer_enabled: false,
+    timer_minutes: 10,
+    timer_seconds: 0,
+  });
+  const [editMatchError, setEditMatchError] = useState("");
+  const [editMatchSubmitting, setEditMatchSubmitting] = useState(false);
 
   const fetchData = async () => {
     try {
@@ -266,6 +289,140 @@ export default function AdminMatchesPage() {
       fetchData();
     } catch (err) {
       setToast({ message: err.message, type: "error" });
+    }
+  };
+
+  const openEditMatchModal = (m) => {
+    const isDoubles = isDoublesCategory(m.category);
+    const totalSecs = Number(m.timer_duration_seconds || 0);
+    setEditingMatch(m);
+    setEditMatchForm({
+      category: m.category || "Men's Singles",
+      round: m.round || "Round 1",
+      court_number: m.court_number || 1,
+      scheduled_time: m.scheduled_time ? String(m.scheduled_time).slice(0, 16) : "",
+      participantA_id: isDoubles ? (m.team_a_id || "") : (m.team_a_player1_id || ""),
+      participantB_id: isDoubles ? (m.team_b_id || "") : (m.team_b_player1_id || ""),
+      score_a: m.score_a ?? 0,
+      score_b: m.score_b ?? 0,
+      status: m.status || "scheduled",
+      winner_team: m.winner_team || "",
+      next_match_id: m.next_match_id || "",
+      next_match_slot: m.next_match_slot || "A",
+      timer_enabled: Boolean(m.timer_enabled),
+      timer_minutes: Math.floor(totalSecs / 60),
+      timer_seconds: totalSecs % 60,
+    });
+    setEditMatchError("");
+    editMatchDialogRef.current?.showModal();
+  };
+
+  const closeEditMatchModal = () => {
+    editMatchDialogRef.current?.close();
+    setEditingMatch(null);
+  };
+
+  const handleEditMatchSubmit = async (e) => {
+    e.preventDefault();
+    if (!editingMatch) return;
+    setEditMatchError("");
+
+    if (
+      editMatchForm.participantA_id &&
+      editMatchForm.participantA_id === editMatchForm.participantB_id
+    ) {
+      setEditMatchError("Participant A and Participant B cannot be the same.");
+      return;
+    }
+
+    const isDoubles = isDoublesCategory(editMatchForm.category);
+    let teamAName = editingMatch.team_a_name;
+    let teamBName = editingMatch.team_b_name;
+    let teamAId = editingMatch.team_a_id;
+    let teamBId = editingMatch.team_b_id;
+    let p1A = editingMatch.team_a_player1_id;
+    let p2A = editingMatch.team_a_player2_id;
+    let p1B = editingMatch.team_b_player1_id;
+    let p2B = editingMatch.team_b_player2_id;
+
+    if (isDoubles) {
+      const tA = teams.find((t) => t.id === editMatchForm.participantA_id);
+      const tB = teams.find((t) => t.id === editMatchForm.participantB_id);
+      if (tA) {
+        teamAId = tA.id;
+        teamAName = tA.name;
+        p1A = tA.player1_id;
+        p2A = tA.player2_id;
+      }
+      if (tB) {
+        teamBId = tB.id;
+        teamBName = tB.name;
+        p1B = tB.player1_id;
+        p2B = tB.player2_id;
+      }
+    } else {
+      const plA = players.find((p) => p.id === editMatchForm.participantA_id);
+      const plB = players.find((p) => p.id === editMatchForm.participantB_id);
+      if (plA) {
+        teamAId = null;
+        teamAName = plA.full_name;
+        p1A = plA.id;
+        p2A = null;
+      }
+      if (plB) {
+        teamBId = null;
+        teamBName = plB.full_name;
+        p1B = plB.id;
+        p2B = null;
+      }
+    }
+
+    setEditMatchSubmitting(true);
+    try {
+      const payload = {
+        category: editMatchForm.category,
+        round: editMatchForm.round,
+        court_number: Number(editMatchForm.court_number) || 1,
+        scheduled_time: editMatchForm.scheduled_time || null,
+        team_a_id: teamAId,
+        team_a_name: teamAName,
+        team_a_player1_id: p1A,
+        team_a_player2_id: p2A,
+        team_b_id: teamBId,
+        team_b_name: teamBName,
+        team_b_player1_id: p1B,
+        team_b_player2_id: p2B,
+        score_a: Number(editMatchForm.score_a) || 0,
+        score_b: Number(editMatchForm.score_b) || 0,
+        status: editMatchForm.status,
+        winner_team:
+          editMatchForm.status === "completed"
+            ? editMatchForm.winner_team ||
+              (Number(editMatchForm.score_a) >= Number(editMatchForm.score_b) ? "A" : "B")
+            : null,
+        next_match_id: editMatchForm.next_match_id || null,
+        next_match_slot: editMatchForm.next_match_slot || null,
+        timer_enabled: editMatchForm.timer_enabled ? 1 : 0,
+        timer_duration_seconds: editMatchForm.timer_enabled
+          ? Number(editMatchForm.timer_minutes) * 60 + Number(editMatchForm.timer_seconds)
+          : 0,
+      };
+
+      const res = await fetch(`/api/matches/${editingMatch.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Failed to update match.");
+
+      closeEditMatchModal();
+      setToast({ message: "Match updated successfully.", type: "success" });
+      fetchData();
+    } catch (err) {
+      setEditMatchError(err.message);
+    } finally {
+      setEditMatchSubmitting(false);
     }
   };
 
@@ -555,6 +712,15 @@ export default function AdminMatchesPage() {
                       View Event Log
                     </Link>
                   )}
+
+                  <button
+                    type="button"
+                    onClick={() => openEditMatchModal(m)}
+                    className="p-2 text-muted hover:text-primary hover:bg-slate-100 rounded-xl transition-colors"
+                    title="Edit Match"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </button>
 
                   <button
                     type="button"
@@ -928,6 +1094,310 @@ export default function AdminMatchesPage() {
           </div>
         </div>
       )}
+
+      {/* Edit Match Modal (Native <dialog>) */}
+      <dialog
+        ref={editMatchDialogRef}
+        aria-labelledby="edit-match-title"
+        className="rounded-2xl max-w-lg w-full border border-border shadow-elevated p-0 overflow-hidden bg-white m-auto max-h-[90vh]"
+      >
+        <div className="px-6 py-4 border-b border-border flex items-center justify-between bg-slate-50">
+          <div>
+            <h1 id="edit-match-title" className="font-heading font-bold text-primary text-sm">
+              Edit Match #{editingMatch?.match_number || ""}
+            </h1>
+            <p className="text-[11px] text-muted mt-0.5">
+              Update participants, scores, status, court, timing, or progression
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={closeEditMatchModal}
+            aria-label="Close edit match dialog"
+            className="p-1 rounded-lg text-muted hover:text-primary hover:bg-slate-200 transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <form onSubmit={handleEditMatchSubmit} className="p-6 space-y-4 text-xs overflow-y-auto max-h-[75vh]">
+          {editMatchError && (
+            <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+              <span>{editMatchError}</span>
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block font-semibold text-primary uppercase tracking-wider mb-1">
+                Category
+              </label>
+              <select
+                value={editMatchForm.category}
+                onChange={(e) =>
+                  setEditMatchForm({
+                    ...editMatchForm,
+                    category: e.target.value,
+                    participantA_id: "",
+                    participantB_id: "",
+                  })
+                }
+                className="w-full px-3 py-2 border border-border rounded-xl bg-white text-primary focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+              >
+                {CATEGORIES.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block font-semibold text-primary uppercase tracking-wider mb-1">
+                Round
+              </label>
+              <input
+                type="text"
+                value={editMatchForm.round}
+                onChange={(e) => setEditMatchForm({ ...editMatchForm, round: e.target.value })}
+                className="w-full px-3 py-2 border border-border rounded-xl bg-white text-primary focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block font-semibold text-primary uppercase tracking-wider mb-1">
+                Court Number
+              </label>
+              <select
+                value={editMatchForm.court_number}
+                onChange={(e) => setEditMatchForm({ ...editMatchForm, court_number: e.target.value })}
+                className="w-full px-3 py-2 border border-border rounded-xl bg-white text-primary focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+              >
+                {[1, 2, 3, 4, 5, 6].map((c) => (
+                  <option key={c} value={c}>
+                    Court {c}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block font-semibold text-primary uppercase tracking-wider mb-1">
+                Scheduled Time
+              </label>
+              <input
+                type="datetime-local"
+                value={editMatchForm.scheduled_time}
+                onChange={(e) => setEditMatchForm({ ...editMatchForm, scheduled_time: e.target.value })}
+                className="w-full px-3 py-2 border border-border rounded-xl bg-white text-primary focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+              />
+            </div>
+          </div>
+
+          {/* Participants */}
+          <div className="space-y-3 pt-3 border-t border-border">
+            {isDoublesCategory(editMatchForm.category) ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-semibold text-primary uppercase tracking-wider mb-1">
+                    Team A
+                  </label>
+                  <select
+                    value={editMatchForm.participantA_id}
+                    onChange={(e) => setEditMatchForm({ ...editMatchForm, participantA_id: e.target.value })}
+                    className="w-full px-3 py-2 border border-border rounded-xl bg-white text-primary focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                  >
+                    <option value="">Keep Current ({editingMatch?.team_a_name})</option>
+                    {teams
+                      .filter((t) => t.category === editMatchForm.category)
+                      .map((t) => (
+                        <option key={t.id} value={t.id}>
+                          {t.name}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-primary uppercase tracking-wider mb-1">
+                    Team B
+                  </label>
+                  <select
+                    value={editMatchForm.participantB_id}
+                    onChange={(e) => setEditMatchForm({ ...editMatchForm, participantB_id: e.target.value })}
+                    className="w-full px-3 py-2 border border-border rounded-xl bg-white text-primary focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                  >
+                    <option value="">Keep Current ({editingMatch?.team_b_name})</option>
+                    {teams
+                      .filter((t) => t.category === editMatchForm.category)
+                      .map((t) => (
+                        <option key={t.id} value={t.id}>
+                          {t.name}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <SearchablePlayerSelect
+                  label="Player A"
+                  value={editMatchForm.participantA_id}
+                  onChange={(playerId) => setEditMatchForm({ ...editMatchForm, participantA_id: playerId })}
+                  players={players.filter((p) =>
+                    editMatchForm.category.includes("Women's")
+                      ? p.gender === "Female"
+                      : p.gender === "Male"
+                  )}
+                  placeholder="Select Player A..."
+                />
+
+                <SearchablePlayerSelect
+                  label="Player B"
+                  value={editMatchForm.participantB_id}
+                  onChange={(playerId) => setEditMatchForm({ ...editMatchForm, participantB_id: playerId })}
+                  players={players.filter((p) =>
+                    editMatchForm.category.includes("Women's")
+                      ? p.gender === "Female"
+                      : p.gender === "Male"
+                  )}
+                  excludeId={editMatchForm.participantA_id}
+                  placeholder="Select Player B..."
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Scores & Status */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 border-t border-border">
+            <div>
+              <label className="block font-semibold text-primary uppercase tracking-wider mb-1">
+                Score A
+              </label>
+              <input
+                type="number"
+                min="0"
+                value={editMatchForm.score_a}
+                onChange={(e) => setEditMatchForm({ ...editMatchForm, score_a: e.target.value })}
+                className="w-full px-3 py-2 border border-border rounded-xl bg-white text-primary font-mono font-bold focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+              />
+            </div>
+
+            <div>
+              <label className="block font-semibold text-primary uppercase tracking-wider mb-1">
+                Score B
+              </label>
+              <input
+                type="number"
+                min="0"
+                value={editMatchForm.score_b}
+                onChange={(e) => setEditMatchForm({ ...editMatchForm, score_b: e.target.value })}
+                className="w-full px-3 py-2 border border-border rounded-xl bg-white text-primary font-mono font-bold focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+              />
+            </div>
+
+            <div>
+              <label className="block font-semibold text-primary uppercase tracking-wider mb-1">
+                Status
+              </label>
+              <select
+                value={editMatchForm.status}
+                onChange={(e) => setEditMatchForm({ ...editMatchForm, status: e.target.value })}
+                className="w-full px-3 py-2 border border-border rounded-xl bg-white text-primary focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+              >
+                <option value="scheduled">Scheduled</option>
+                <option value="live">Live</option>
+                <option value="paused">Paused</option>
+                <option value="completed">Completed</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block font-semibold text-primary uppercase tracking-wider mb-1">
+                Winner
+              </label>
+              <select
+                value={editMatchForm.winner_team}
+                disabled={editMatchForm.status !== "completed"}
+                onChange={(e) => setEditMatchForm({ ...editMatchForm, winner_team: e.target.value })}
+                className="w-full px-3 py-2 border border-border rounded-xl bg-white text-primary disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+              >
+                <option value="">Auto (By Score)</option>
+                <option value="A">Side A</option>
+                <option value="B">Side B</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Timer */}
+          <div className="pt-3 border-t border-border space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="font-semibold text-primary uppercase tracking-wider">Match Timer</span>
+              <button
+                type="button"
+                onClick={() =>
+                  setEditMatchForm({ ...editMatchForm, timer_enabled: !editMatchForm.timer_enabled })
+                }
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  editMatchForm.timer_enabled ? "bg-teal-600" : "bg-slate-300"
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    editMatchForm.timer_enabled ? "translate-x-6" : "translate-x-1"
+                  }`}
+                />
+              </button>
+            </div>
+            {editMatchForm.timer_enabled && (
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">Minutes</label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="120"
+                    value={editMatchForm.timer_minutes}
+                    onChange={(e) => setEditMatchForm({ ...editMatchForm, timer_minutes: e.target.value })}
+                    className="w-full px-3 py-2 border border-border rounded-xl bg-white text-primary font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">Seconds</label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="59"
+                    value={editMatchForm.timer_seconds}
+                    onChange={(e) => setEditMatchForm({ ...editMatchForm, timer_seconds: e.target.value })}
+                    className="w-full px-3 py-2 border border-border rounded-xl bg-white text-primary font-mono"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="pt-4 border-t border-border flex justify-end gap-3">
+            <button
+              type="button"
+              onClick={closeEditMatchModal}
+              className="px-4 py-2 font-semibold text-muted hover:text-primary transition-colors text-xs"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={editMatchSubmitting}
+              className="px-5 py-2.5 font-bold rounded-xl bg-primary text-white hover:bg-secondary transition-colors text-xs disabled:opacity-50 shadow-subtle"
+            >
+              {editMatchSubmitting ? "Saving..." : "Save Match Changes"}
+            </button>
+          </div>
+        </form>
+      </dialog>
 
       {/* Custom Confirmation Modal (Replaces browser confirm) */}
       <ConfirmModal

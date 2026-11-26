@@ -56,6 +56,8 @@ export default function AdminPointsPage() {
   const editDialogRef = useRef(null);
   const [editingEntry, setEditingEntry] = useState(null);
   const [editForm, setEditForm] = useState({
+    entity_name: "",
+    category: "Men's Singles",
     matches_played: 0,
     matches_won: 0,
     matches_lost: 0,
@@ -197,6 +199,8 @@ export default function AdminPointsPage() {
   const openEditModal = (entry) => {
     setEditingEntry(entry);
     setEditForm({
+      entity_name: entry.entity_name ?? "",
+      category: entry.category ?? "Men's Singles",
       matches_played: entry.matches_played ?? 0,
       matches_won: entry.matches_won ?? 0,
       matches_lost: entry.matches_lost ?? 0,
@@ -224,6 +228,8 @@ export default function AdminPointsPage() {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          entity_name: editForm.entity_name.trim(),
+          category: editForm.category,
           matches_played: Number(editForm.matches_played),
           matches_won: Number(editForm.matches_won),
           matches_lost: Number(editForm.matches_lost),
@@ -301,11 +307,17 @@ export default function AdminPointsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-border">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-heading font-black text-primary tracking-tight">
-            Tournament Standings & Points
-          </h1>
+          <div className="flex items-center gap-2.5">
+            <h1 className="text-2xl sm:text-3xl font-heading font-black text-primary tracking-tight">
+              Tournament Standings &amp; Points
+            </h1>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              Live Auto-Sync
+            </span>
+          </div>
           <p className="text-xs text-muted mt-1">
-            Manage cumulative tournament standings, issue traceable manual adjustments, and audit point logs.
+            Manage cumulative tournament standings, edit any competitor&apos;s points/stats live, and audit point logs.
           </p>
         </div>
 
@@ -354,8 +366,8 @@ export default function AdminPointsPage() {
                 type="button"
                 onClick={() => setCategoryFilter(categoryFilter === cat ? "All" : cat)}
                 className={`p-3.5 rounded-2xl border text-left transition-all flex flex-col justify-between ${isSelected
-                    ? "bg-amber-50/80 border-amber-400 ring-1 ring-amber-400 shadow-subtle"
-                    : "bg-white border-border hover:border-slate-300 shadow-subtle"
+                  ? "bg-amber-50/80 border-amber-400 ring-1 ring-amber-400 shadow-subtle"
+                  : "bg-white border-border hover:border-slate-300 shadow-subtle"
                   }`}
               >
                 <div>
@@ -394,8 +406,8 @@ export default function AdminPointsPage() {
               type="button"
               onClick={() => setCategoryFilter(cat)}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${categoryFilter === cat
-                  ? "bg-primary text-white shadow-subtle"
-                  : "bg-white border border-border text-slate-700 hover:bg-slate-50"
+                ? "bg-primary text-white shadow-subtle"
+                : "bg-white border border-border text-slate-700 hover:bg-slate-50"
                 }`}
             >
               {cat}
@@ -409,8 +421,8 @@ export default function AdminPointsPage() {
             type="button"
             onClick={() => setViewMode("by_category")}
             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${viewMode === "by_category"
-                ? "bg-white text-primary shadow-xs border border-border"
-                : "text-muted hover:text-primary"
+              ? "bg-white text-primary shadow-xs border border-border"
+              : "text-muted hover:text-primary"
               }`}
           >
             <Layers className="w-3.5 h-3.5 text-teal-600" />
@@ -420,8 +432,8 @@ export default function AdminPointsPage() {
             type="button"
             onClick={() => setViewMode("table")}
             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${viewMode === "table"
-                ? "bg-white text-primary shadow-xs border border-border"
-                : "text-muted hover:text-primary"
+              ? "bg-white text-primary shadow-xs border border-border"
+              : "text-muted hover:text-primary"
               }`}
           >
             <ListOrdered className="w-3.5 h-3.5 text-slate-600" />
@@ -527,10 +539,11 @@ export default function AdminPointsPage() {
                                   <button
                                     type="button"
                                     onClick={() => openEditModal(r)}
-                                    className="p-1.5 rounded-lg text-muted hover:text-primary hover:bg-slate-100 transition-colors"
-                                    title="Edit Leaderboard Entry"
+                                    className="px-2 py-1 rounded-lg border border-border text-primary hover:bg-slate-100 transition-colors inline-flex items-center gap-1 text-[11px] font-semibold"
+                                    title="Edit Points & Stats"
                                   >
-                                    <Edit2 className="w-3.5 h-3.5" />
+                                    <Edit2 className="w-3 h-3" />
+                                    <span>Edit</span>
                                   </button>
                                   <button
                                     type="button"
@@ -658,10 +671,11 @@ export default function AdminPointsPage() {
                               <button
                                 type="button"
                                 onClick={() => openEditModal(r)}
-                                className="p-1.5 rounded-lg text-muted hover:text-primary hover:bg-slate-100 transition-colors"
-                                title="Edit Leaderboard Entry"
+                                className="px-2 py-1 rounded-lg border border-border text-primary hover:bg-slate-100 transition-colors inline-flex items-center gap-1 text-[11px] font-semibold"
+                                title="Edit Points & Stats"
                               >
-                                <Edit2 className="w-3.5 h-3.5" />
+                                <Edit2 className="w-3 h-3" />
+                                <span>Edit</span>
                               </button>
                               <button
                                 type="button"
@@ -740,8 +754,8 @@ export default function AdminPointsPage() {
                         type="button"
                         onClick={() => setCurrentPage(page)}
                         className={`min-w-7 h-7 px-2 rounded-lg text-xs font-semibold transition-all ${page === safeCurrentPage
-                            ? "bg-primary text-white shadow-xs"
-                            : "bg-white border border-border text-slate-700 hover:bg-slate-100"
+                          ? "bg-primary text-white shadow-xs"
+                          : "bg-white border border-border text-slate-700 hover:bg-slate-100"
                           }`}
                       >
                         {page}
@@ -982,6 +996,38 @@ export default function AdminPointsPage() {
             </div>
           )}
 
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block font-semibold text-primary uppercase tracking-wider mb-1">
+                Participant / Team Name
+              </label>
+              <input
+                type="text"
+                required
+                autoFocus
+                value={editForm.entity_name}
+                onChange={(e) => setEditForm({ ...editForm, entity_name: e.target.value })}
+                className="w-full px-3 py-2 border border-border rounded-xl bg-white text-primary focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+              />
+            </div>
+            <div>
+              <label className="block font-semibold text-primary uppercase tracking-wider mb-1">
+                Category
+              </label>
+              <select
+                value={editForm.category}
+                onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
+                className="w-full px-3 py-2 border border-border rounded-xl bg-white text-primary focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+              >
+                {specificCategories.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
           <div className="grid grid-cols-3 gap-3">
             <div>
               <label className="block font-semibold text-primary uppercase tracking-wider mb-1">
@@ -991,7 +1037,6 @@ export default function AdminPointsPage() {
                 type="number"
                 min="0"
                 required
-                autoFocus
                 value={editForm.matches_played}
                 onChange={(e) => setEditForm({ ...editForm, matches_played: e.target.value })}
                 className="w-full px-3 py-2 border border-border rounded-xl bg-white text-primary font-mono focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
