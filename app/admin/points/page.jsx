@@ -354,8 +354,8 @@ export default function AdminPointsPage() {
                 type="button"
                 onClick={() => setCategoryFilter(categoryFilter === cat ? "All" : cat)}
                 className={`p-3.5 rounded-2xl border text-left transition-all flex flex-col justify-between ${isSelected
-                  ? "bg-amber-50/80 border-amber-400 ring-1 ring-amber-400 shadow-subtle"
-                  : "bg-white border-border hover:border-slate-300 shadow-subtle"
+                    ? "bg-amber-50/80 border-amber-400 ring-1 ring-amber-400 shadow-subtle"
+                    : "bg-white border-border hover:border-slate-300 shadow-subtle"
                   }`}
               >
                 <div>
@@ -394,8 +394,8 @@ export default function AdminPointsPage() {
               type="button"
               onClick={() => setCategoryFilter(cat)}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${categoryFilter === cat
-                ? "bg-primary text-white shadow-subtle"
-                : "bg-white border border-border text-slate-700 hover:bg-slate-50"
+                  ? "bg-primary text-white shadow-subtle"
+                  : "bg-white border border-border text-slate-700 hover:bg-slate-50"
                 }`}
             >
               {cat}
@@ -409,8 +409,8 @@ export default function AdminPointsPage() {
             type="button"
             onClick={() => setViewMode("by_category")}
             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${viewMode === "by_category"
-              ? "bg-white text-primary shadow-xs border border-border"
-              : "text-muted hover:text-primary"
+                ? "bg-white text-primary shadow-xs border border-border"
+                : "text-muted hover:text-primary"
               }`}
           >
             <Layers className="w-3.5 h-3.5 text-teal-600" />
@@ -420,8 +420,8 @@ export default function AdminPointsPage() {
             type="button"
             onClick={() => setViewMode("table")}
             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${viewMode === "table"
-              ? "bg-white text-primary shadow-xs border border-border"
-              : "text-muted hover:text-primary"
+                ? "bg-white text-primary shadow-xs border border-border"
+                : "text-muted hover:text-primary"
               }`}
           >
             <ListOrdered className="w-3.5 h-3.5 text-slate-600" />
@@ -740,8 +740,8 @@ export default function AdminPointsPage() {
                         type="button"
                         onClick={() => setCurrentPage(page)}
                         className={`min-w-7 h-7 px-2 rounded-lg text-xs font-semibold transition-all ${page === safeCurrentPage
-                          ? "bg-primary text-white shadow-xs"
-                          : "bg-white border border-border text-slate-700 hover:bg-slate-100"
+                            ? "bg-primary text-white shadow-xs"
+                            : "bg-white border border-border text-slate-700 hover:bg-slate-100"
                           }`}
                       >
                         {page}

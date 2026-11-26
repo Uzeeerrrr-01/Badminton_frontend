@@ -121,10 +121,11 @@ export default function LeaderboardPage() {
                 <div
                   key={cat}
                   onClick={() => setSelectedCategory(isSelected ? "All" : cat)}
-                  className={`p-3 sm:p-4 rounded-2xl border transition-all cursor-pointer relative overflow-hidden flex flex-col justify-between last:col-span-2 lg:last:col-span-1 ${isSelected
+                  className={`p-3 sm:p-4 rounded-2xl border transition-all cursor-pointer relative overflow-hidden flex flex-col justify-between last:col-span-2 lg:last:col-span-1 ${
+                    isSelected
                       ? "bg-accent/5 border-accent shadow-md ring-2 ring-accent/20"
                       : "bg-white border-border hover:border-slate-300 shadow-subtle hover:shadow-card"
-                    }`}
+                  }`}
                 >
                   {/* Decorative golden accent */}
                   <div className="flex items-center justify-between mb-1.5 sm:mb-2 gap-1">
@@ -215,10 +216,11 @@ export default function LeaderboardPage() {
               <button
                 key={c}
                 onClick={() => setSelectedCategory(c)}
-                className={`px-3 sm:px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${selectedCategory === c
+                className={`px-3 sm:px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
+                  selectedCategory === c
                     ? "bg-accent text-white shadow-emerald"
                     : "text-secondary hover:text-primary hover:bg-slate-50 border border-transparent"
-                  }`}
+                }`}
               >
                 {c}
               </button>
@@ -231,20 +233,22 @@ export default function LeaderboardPage() {
               <div className="flex items-center bg-slate-100 p-0.5 rounded-xl border border-slate-200 text-xs">
                 <button
                   onClick={() => setViewMode("grouped")}
-                  className={`flex-1 xs:flex-none px-2.5 py-1 rounded-lg font-bold flex items-center justify-center gap-1.5 transition-all ${viewMode === "grouped"
+                  className={`flex-1 xs:flex-none px-2.5 py-1 rounded-lg font-bold flex items-center justify-center gap-1.5 transition-all ${
+                    viewMode === "grouped"
                       ? "bg-white text-primary shadow-xs"
                       : "text-muted hover:text-primary"
-                    }`}
+                  }`}
                 >
                   <Layers className="w-3.5 h-3.5" />
                   <span>By Category</span>
                 </button>
                 <button
                   onClick={() => setViewMode("table")}
-                  className={`flex-1 xs:flex-none px-2.5 py-1 rounded-lg font-bold flex items-center justify-center gap-1.5 transition-all ${viewMode === "table"
+                  className={`flex-1 xs:flex-none px-2.5 py-1 rounded-lg font-bold flex items-center justify-center gap-1.5 transition-all ${
+                    viewMode === "table"
                       ? "bg-white text-primary shadow-xs"
                       : "text-muted hover:text-primary"
-                    }`}
+                  }`}
                 >
                   <ListOrdered className="w-3.5 h-3.5" />
                   <span>Overall Table</span>
@@ -318,8 +322,9 @@ export default function LeaderboardPage() {
                           return (
                             <tr
                               key={row.id || idx}
-                              className={`transition-colors ${isTop ? "bg-amber-50/30 hover:bg-amber-50/50" : "hover:bg-slate-50/80"
-                                }`}
+                              className={`transition-colors ${
+                                isTop ? "bg-amber-50/30 hover:bg-amber-50/50" : "hover:bg-slate-50/80"
+                              }`}
                             >
                               <td className="py-3 px-4 font-bold text-primary">
                                 {idx === 0 ? (
@@ -359,8 +364,9 @@ export default function LeaderboardPage() {
                                 {row.points_scored} : {row.points_conceded}
                               </td>
                               <td
-                                className={`py-3 px-4 text-center font-mono font-bold ${diff > 0 ? "text-accent" : diff < 0 ? "text-rose-600" : "text-secondary"
-                                  }`}
+                                className={`py-3 px-4 text-center font-mono font-bold ${
+                                  diff > 0 ? "text-accent" : diff < 0 ? "text-rose-600" : "text-secondary"
+                                }`}
                               >
                                 {diff > 0 ? `+${diff}` : diff}
                               </td>
@@ -383,8 +389,9 @@ export default function LeaderboardPage() {
                       return (
                         <div
                           key={row.id || idx}
-                          className={`p-3.5 flex items-center justify-between gap-3 ${isTop ? "bg-amber-50/40" : "bg-white"
-                            }`}
+                          className={`p-3.5 flex items-center justify-between gap-3 ${
+                            isTop ? "bg-amber-50/40" : "bg-white"
+                          }`}
                         >
                           <div className="flex items-center gap-2.5 min-w-0">
                             <div className="shrink-0">
@@ -486,10 +493,11 @@ export default function LeaderboardPage() {
                       return (
                         <tr
                           key={row.id || idx}
-                          className={`transition-colors ${isTopInCategory && selectedCategory !== "All"
+                          className={`transition-colors ${
+                            isTopInCategory && selectedCategory !== "All"
                               ? "bg-amber-50/20 hover:bg-amber-50/40"
                               : "hover:bg-slate-50/80"
-                            }`}
+                          }`}
                         >
                           <td className="py-4 px-4 font-bold text-primary">
                             {absoluteRank === 1 ? (
@@ -533,8 +541,9 @@ export default function LeaderboardPage() {
                             {row.points_scored} : {row.points_conceded}
                           </td>
                           <td
-                            className={`py-4 px-4 text-center font-mono font-bold ${diff > 0 ? "text-accent" : diff < 0 ? "text-rose-600" : "text-secondary"
-                              }`}
+                            className={`py-4 px-4 text-center font-mono font-bold ${
+                              diff > 0 ? "text-accent" : diff < 0 ? "text-rose-600" : "text-secondary"
+                            }`}
                           >
                             {diff > 0 ? `+${diff}` : diff}
                           </td>
@@ -564,8 +573,9 @@ export default function LeaderboardPage() {
                   return (
                     <div
                       key={row.id || idx}
-                      className={`p-3.5 flex items-center justify-between gap-3 ${isTopInCategory && selectedCategory !== "All" ? "bg-amber-50/40" : "bg-white"
-                        }`}
+                      className={`p-3.5 flex items-center justify-between gap-3 ${
+                        isTopInCategory && selectedCategory !== "All" ? "bg-amber-50/40" : "bg-white"
+                      }`}
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
                         <div className="shrink-0">
@@ -667,10 +677,11 @@ export default function LeaderboardPage() {
                           key={page}
                           type="button"
                           onClick={() => setCurrentPage(page)}
-                          className={`min-w-6 sm:min-w-7 h-6 sm:h-7 px-1.5 sm:px-2 rounded-lg text-xs font-semibold transition-all ${page === safeCurrentPage
+                          className={`min-w-6 sm:min-w-7 h-6 sm:h-7 px-1.5 sm:px-2 rounded-lg text-xs font-semibold transition-all ${
+                            page === safeCurrentPage
                               ? "bg-primary text-white shadow-xs"
                               : "bg-white border border-border text-slate-700 hover:bg-slate-100"
-                            }`}
+                          }`}
                         >
                           {page}
                         </button>
